@@ -1,0 +1,33 @@
+#include <stdio.h>
+#include <pthread.h>
+#include <unistd.h>
+#include "main.h"
+#include "application/app.h"
+#include "kfifo/kfifo.h"
+#include "utils/utils.h"
+#include "utils/scpi-def.h"
+#include "ring/ringbuffer.h"
+
+
+extern int g_restart_config;/*default param config*/
+
+
+int main(int argc, char *argv[])
+{
+	init();
+	//test_modules();
+	//test_ring_buffer();
+	while(1) {
+		if(g_restart_config)
+		{
+			init_param();
+			g_restart_config = 0;
+		}	
+		sleep(10);
+	}
+	
+	return 0;
+}
+
+
+

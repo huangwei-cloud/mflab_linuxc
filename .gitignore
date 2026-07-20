@@ -1,0 +1,12 @@
+build/
+*.o
+*.d
+*.elf
+*.bin
+*.map
+*.log
+*.tmp
+*.bak
+desktop.ini
+Thumbs.db
+
