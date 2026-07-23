@@ -497,8 +497,11 @@ int load_system_config(const char* filename, SystemConfig* configs, int max_coun
 			}else if(strncmp(configs[i].model, DEVICE_MODEL_STR_L500K, strlen(DEVICE_MODEL_STR_L500K)) == 0) {
 				g_device_model = DEVICE_MODEL_L500K;
 				printf("Device Model: %s\r\n", DEVICE_MODEL_STR_L500K);
+			}else if(strncmp(configs[i].model, DEVICE_MODEL_STR_MFI_LAB, strlen(DEVICE_MODEL_STR_MFI_LAB)) == 0) {
+				g_device_model = DEVICE_MODEL_M005M;
+				printf("Device Model: %s\r\n", DEVICE_MODEL_STR_MFI_LAB);
 			}else {
-				printf("Unknow Device Model\r\n");
+				printf("Unknown Device Model\r\n");
 			}
         } else {
             configs[i].model[0] = '\0';

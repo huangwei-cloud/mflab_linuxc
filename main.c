@@ -15,8 +15,6 @@ extern int g_restart_config;/*default param config*/
 int main(int argc, char *argv[])
 {
 	init();
-	//test_modules();
-	//test_ring_buffer();
 	while(1) {
 		if(g_restart_config)
 		{

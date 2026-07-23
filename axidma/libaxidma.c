@@ -630,16 +630,6 @@ int init_dma()
         return -1;
     }
 
-    // reg_write_by_name("ch1_dma_up_data_clr", 0);
-    // reg_write_by_name("ch2_dma_up_data_clr", 0);
-
-    // reg_write_by_name("ch1_dma_up_data_clr", 1);
-    // reg_write_by_name("ch2_dma_up_data_clr", 1);
-    // usleep(1000000);
-    // reg_write_by_name("ch1_dma_up_data_clr", 0);
-    // reg_write_by_name("ch2_dma_up_data_clr", 0);
-    
-
     return 0;
 }
 

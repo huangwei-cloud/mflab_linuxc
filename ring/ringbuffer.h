@@ -18,66 +18,29 @@
 #endif
 
 typedef enum _DATA_CH {
-	CH1_X1 = 0,
-	CH2_Y1,
-	CH3_R1,
-	CH4_Q1,
-	CH5_X2,
-	CH6_Y2,
-	CH7_R2,
-	CH8_Q2,
-	CH9_X3,
-	CH10_Y3,
-	CH11_R3,
-	CH12_Q3,
-	CH13_X4,
-	CH14_Y4,
-	CH15_R4,
-	CH16_Q4,
-	CH17_X5,
-	CH18_Y5,
-	CH19_R5,
-	CH20_Q5,
-	CH21_X6,
-	CH22_Y6,
-	CH23_R6,
-	CH24_Q6,
-	CH25_X7,
-	CH26_Y7,
-	CH27_R7,
-	CH28_Q7,
-	CH29_X8,
-	CH30_Y8,
-	CH31_R8,
-	CH32_Q8,
-	CH33_FREQ1,
-	CH34_FREQ2,
-	CH35_FREQ3,
-	CH36_FREQ4,
-	CH37_FREQ5,
-	CH38_FREQ6,
-	CH39_FREQ7,
-	CH40_FREQ8,
-	CH41_AUXIN1,
-	CH42_AUXIN2,
-	CH43_AUXIN3,
-	CH44_AUXIN4,
-	CH45_AUXOUT1,
-	CH46_AUXOUT2,
-	CH47_AUXOUT3,
-	CH48_AUXOUT4,
-	CH49_PID1,
-	CH50_PID2,
-	CH51_PID3,
-	CH52_PID4,
-	CH53_PCNT1,
-	CH54_PCNT2,
-	CH55_PCNT3,
-	CH56_PCNT4,
-	CH57_SCOPE_CH1,
-	CH58_SCOPE_CH2,
-	CH_MAX = 58,
+	CH_X1 = 0,
+	CH_Y1 = 1,
+	CH_R1 = 2,
+	CH_Q1 = 3,
+	CH_PID1 = 4,
+	CH_PID2 = 5,
+	CH_PID3 = 6,
+	CH_PID4 = 7,
+	CH_SCOPE_CH1 = 8,
+	CH_SCOPE_CH2 = 9,
+	CH_MAX = 10,
 }DataCh;
+
+typedef struct _DEMO_DAQ_DATA {
+	double X1;
+	double Y1;
+	double R1;
+	double Q1;
+	double PID1;
+	double PID2;
+	double PID3;
+	double PID4;
+}DemoDaqData;
 
 typedef enum _DAQ_DATA_SOURCE_M005M {
 	DAQ_SOURCE_M005M_X1 = 0,
@@ -127,6 +90,17 @@ typedef enum _DAQ_DATA_SOURCE_M005M {
 	DAQ_SOURCE_M005M_PCNT3,
 	DAQ_SOURCE_M005M_PCNT4,
 }DaqDataSourceM005M;
+
+typedef enum _DAQ_DATA_SOURCE_MFILAB {
+	DAQ_SOURCE_MFILAB_X1 = 0,
+	DAQ_SOURCE_MFILAB_Y1,
+	DAQ_SOURCE_MFILAB_R1,
+	DAQ_SOURCE_MFILAB_Q1,
+	DAQ_SOURCE_MFILAB_PID1,
+	DAQ_SOURCE_MFILAB_PID2,
+	DAQ_SOURCE_MFILAB_PID3,
+	DAQ_SOURCE_MFILAB_PID4,
+}DaqDataSourceMFILAB;
 
 typedef enum _DAQ_DATA_SOURCE_L500K {
 	DAQ_SOURCE_L500K_X1 = 0,
@@ -190,24 +164,21 @@ typedef enum _DAQ_DATA_SOURCE_L500K {
 typedef enum _SCOPE_DATA_SOURCE {
 	SCOPE_SOURCE_SIGNALIN1 = 0,
 	SCOPE_SOURCE_SIGNALIN2,
-	SCOPE_SOURCE_AUXIN1,
-	SCOPE_SOURCE_AUXIN2,
-	SCOPE_SOURCE_AUXIN3,
-	SCOPE_SOURCE_AUXIN4,
-
-	/* M005M scope source order: SignalIn1/2, AuxIn1..4, TrigIn1..2. */
-	SCOPE_SOURCE_M005M_TRIG1,
-	SCOPE_SOURCE_M005M_TRIG2,
-	SCOPE_SOURCE_TRIG1 = SCOPE_SOURCE_M005M_TRIG1,
-	SCOPE_SOURCE_TRIG2 = SCOPE_SOURCE_M005M_TRIG2,
-
-	/* L500K scope source order: SignalIn1/2, AuxIn1..4, RefIn1/2, TrigIn1..4. */
-	SCOPE_SOURCE_L500K_REFIN1 = 6,
-	SCOPE_SOURCE_L500K_REFIN2,
-	SCOPE_SOURCE_L500K_TRIG1,
-	SCOPE_SOURCE_L500K_TRIG2,
-	SCOPE_SOURCE_L500K_TRIG3,
-	SCOPE_SOURCE_L500K_TRIG4,
+	SCOPE_SOURCE_SINOUT1,
+	SCOPE_SOURCE_SINOUT2,
+	SCOPE_SOURCE_REFOSC,
+	SCOPE_SOURCE_DEMODX,
+	SCOPE_SOURCE_DEMODY,
+	SCOPE_SOURCE_DEMODR,
+	SCOPE_SOURCE_DEMODQ,
+	SCOPE_SOURCE_PIDUT1,
+	SCOPE_SOURCE_PIDUT2,
+	SCOPE_SOURCE_PIDUT3,
+	SCOPE_SOURCE_PIDUT4,
+	SCOPE_SOURCE_PIDERROR1,
+	SCOPE_SOURCE_PIDERROR2,
+	SCOPE_SOURCE_PIDERROR3,
+	SCOPE_SOURCE_PIDERROR4,
 }ScopeDataSource;
 
 typedef enum _DEMO_INPUT_SOURCE {
@@ -351,6 +322,20 @@ typedef enum _TRIG_SOURCE_L500K {
 	TS_L500K_55_TRIGIN4,
 }TrigSourceL500K;
 
+typedef enum _TRIG_SOURCE_MFILAB {
+    TS_SIGNALIN1 = 1,
+    TS_SIGNALIN2 = 2,
+
+    TS_DEMODULATOR_X = 3,
+    TS_DEMODULATOR_Y = 4,
+    TS_DEMODULATOR_R = 5,
+    TS_DEMODULATOR_Q = 6,
+
+    TS_SIGNALOUT1_PHASE = 7,
+    TS_SIGNALOUT2_PHASE = 8,
+    TS_SOFTWARE = 9,
+    TS_TRIGIN1 = 10,
+}TrigSourceMFILAB;
 
 typedef struct {
     uint8_t data[FRAME_SIZE];
@@ -365,67 +350,6 @@ typedef struct {
     int full_count;
     pthread_mutex_t mutex;
 } FrameRingBuffer;
-
-typedef struct _DEMO_DAQ_DATA {
-	double X1;
-	double Y1;
-	double R1;
-	double Q1;
-	double X2;
-	double Y2;
-	double R2;
-	double Q2;
-	double X3;
-	double Y3;
-	double R3;
-	double Q3;
-	double X4;
-	double Y4;
-	double R4;
-	double Q4;
-	double X5;
-	double Y5;
-	double R5;
-	double Q5;
-	double X6;
-	double Y6;
-	double R6;
-	double Q6;
-	double X7;
-	double Y7;
-	double R7;
-	double Q7;
-	double X8;
-	double Y8;
-	double R8;
-	double Q8;
-	double FREQ1;
-	double FREQ2;
-	double FREQ3;
-	double FREQ4;
-	double FREQ5;
-	double FREQ6;
-	double FREQ7;
-	double FREQ8;
-	double AUXIN1;
-	double AUXIN2;
-	double AUXIN3;
-	double AUXIN4;
-	double AUXOUT1;
-	double AUXOUT2;
-	double AUXOUT3;
-	double AUXOUT4;
-	double PID1;
-	double PID2;
-	double PID3;
-	double PID4;
-	double PCNT1;
-	double PCNT2;
-	double PCNT3;
-	double PCNT4;
-	double MUX_SCH1_X;
-	double MUX_SCH2_X;
-}DemoDaqData;
 
 /*************PWA(periodic Waveform Analyzer)**********************/
 typedef struct {
@@ -447,8 +371,6 @@ void frame_filter_reset(FrameFilter *ff);
 int frame_filter_calloc_test();
 
 /*******************************************************************/
-
-
 void get_rb_signle_instance(FrameRingBuffer **frb, DataCh ch);
 void get_rb_multiple_instance(FrameRingBuffer **frb);
 void get_rb_scope_instance(FrameRingBuffer **frb);

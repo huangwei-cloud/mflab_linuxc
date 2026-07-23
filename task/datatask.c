@@ -88,7 +88,7 @@ int get_channels(int *channel_list, int ch_type, int *lowsrc, int *hightsrc)
 	        if ((number >> i) & 0x1) {
 				DataCh data_ch = daq_source_to_data_ch(i);
 	            channel_list[count] = i;  // record channel index
-	            if(data_ch > CH32_Q8) {
+	            if(data_ch > CH_PID4) {
 					highsrc_cnt++;
 				}else {
 					lowsrc_cnt++;
@@ -107,18 +107,18 @@ int get_channels(int *channel_list, int ch_type, int *lowsrc, int *hightsrc)
 			lowsrc_cnt = 0;
 			highsrc_cnt = 0;
 		} else if (ch1state == 0 && ch2state == 1) {
-			channel_list[0] = CH58_SCOPE_CH2;
+			channel_list[0] = CH_SCOPE_CH2;
 			count = 1;
 			lowsrc_cnt = 0;
 			highsrc_cnt = 1;
 		} else if (ch1state == 1 && ch2state == 0) {
-			channel_list[0] = CH57_SCOPE_CH1;
+			channel_list[0] = CH_SCOPE_CH1;
 			count = 1;
 			lowsrc_cnt = 1;//CH1 enabled
 			highsrc_cnt = 0;//CH2 disabled
 		} else if (ch1state == 1 && ch2state == 1) {
-			channel_list[0] = CH57_SCOPE_CH1;
-			channel_list[1] = CH58_SCOPE_CH2;
+			channel_list[0] = CH_SCOPE_CH1;
+			channel_list[1] = CH_SCOPE_CH2;
 			count = 2;
 			lowsrc_cnt = 1;
 			highsrc_cnt = 1;
@@ -244,11 +244,7 @@ typedef enum {
 	DAQ_SOURCE_KIND_Y,
 	DAQ_SOURCE_KIND_R,
 	DAQ_SOURCE_KIND_Q,
-	DAQ_SOURCE_KIND_FREQ,
-	DAQ_SOURCE_KIND_AUXIN,
-	DAQ_SOURCE_KIND_AUXOUT,
 	DAQ_SOURCE_KIND_PID,
-	DAQ_SOURCE_KIND_PCNT,
 	DAQ_SOURCE_KIND_UNKNOWN,
 } DaqSourceKind;
 
@@ -259,7 +255,8 @@ static int daq_source_demod_count_by_model(void)
 
 static DaqSourceKind daq_source_get_kind_index(int source, unsigned *index)
 {
-	int demod_count = daq_source_demod_count_by_model();
+	//int demod_count = daq_source_demod_count_by_model();
+	int demod_count = 1;
 	int base;
 
 	if (source >= 0 && source < demod_count * 4) {
@@ -273,29 +270,10 @@ static DaqSourceKind daq_source_get_kind_index(int source, unsigned *index)
 		}
 	}
 	base = demod_count * 4;
-	if (source >= base && source < base + demod_count) {
-		*index = (unsigned)(source - base);
-		return DAQ_SOURCE_KIND_FREQ;
-	}
-	base = demod_count * 5;
-	if (source >= base && source < base + 4) {
-		*index = (unsigned)(source - base);
-		return DAQ_SOURCE_KIND_AUXIN;
-	}
-	base += 4;
-	if (source >= base && source < base + 4) {
-		*index = (unsigned)(source - base);
-		return DAQ_SOURCE_KIND_AUXOUT;
-	}
-	base += 4;
+
 	if (source >= base && source < base + 4) {
 		*index = (unsigned)(source - base);
 		return DAQ_SOURCE_KIND_PID;
-	}
-	base += 4;
-	if (source >= base && source < base + 4) {
-		*index = (unsigned)(source - base);
-		return DAQ_SOURCE_KIND_PCNT;
 	}
 
 	*index = 0;
@@ -308,16 +286,12 @@ static DataCh daq_source_to_data_ch(int source)
 	DaqSourceKind kind = daq_source_get_kind_index(source, &index);
 
 	switch(kind) {
-	case DAQ_SOURCE_KIND_X: return (DataCh)(CH1_X1 + index * 4);
-	case DAQ_SOURCE_KIND_Y: return (DataCh)(CH2_Y1 + index * 4);
-	case DAQ_SOURCE_KIND_R: return (DataCh)(CH3_R1 + index * 4);
-	case DAQ_SOURCE_KIND_Q: return (DataCh)(CH4_Q1 + index * 4);
-	case DAQ_SOURCE_KIND_FREQ: return (DataCh)(CH33_FREQ1 + index);
-	case DAQ_SOURCE_KIND_AUXIN: return (DataCh)(CH41_AUXIN1 + index);
-	case DAQ_SOURCE_KIND_AUXOUT: return (DataCh)(CH45_AUXOUT1 + index);
-	case DAQ_SOURCE_KIND_PID: return (DataCh)(CH49_PID1 + index);
-	case DAQ_SOURCE_KIND_PCNT: return (DataCh)(CH53_PCNT1 + index);
-	default: return CH1_X1;
+	case DAQ_SOURCE_KIND_X: return (DataCh)(CH_X1 + index * 4);
+	case DAQ_SOURCE_KIND_Y: return (DataCh)(CH_Y1 + index * 4);
+	case DAQ_SOURCE_KIND_R: return (DataCh)(CH_R1 + index * 4);
+	case DAQ_SOURCE_KIND_Q: return (DataCh)(CH_Q1 + index * 4);
+	case DAQ_SOURCE_KIND_PID: return (DataCh)(CH_PID1 + index);
+	default: return CH_X1;
 	}
 }
 
@@ -366,138 +340,52 @@ static double load_double_swap32(const void *p, int source)
 	switch(source_kind) {
 	case DAQ_SOURCE_KIND_X:
 		if(demo_source == DEMO_INPUT_CH1) {
-			if(g_device_model == DEVICE_MODEL_M005M_VV || g_device_model == DEVICE_MODEL_M005M_VI) {
-				 value = swapped * cvmt->voltage1[glp->g_vol_range1].range / cvmt->voltage1[glp->g_vol_range1].X; //FPGA ALREADY X 2
-			}else if(g_device_model == DEVICE_MODEL_M005M) {
-				if(glp->g_si_config[0].measure_mode == SINGLEINPUT_MEASURE_MODE_VOLTAGE) {
-					value = swapped * cvmt->voltage1[glp->g_si_config[0].range-1].range / cvmt->voltage1[glp->g_si_config[0].range-1].X;
-				} else if(glp->g_si_config[0].measure_mode == SINGLEINPUT_MEASURE_MODE_CURRENT) {
-					value = swapped * cvmt->current[glp->g_si_config[0].range-1].range / cvmt->current[glp->g_si_config[0].range-1].X;
-				}
-			}else if(g_device_model == DEVICE_MODEL_L500K) {
-				if(glp->g_l500k_si_config[0].measure_mode == L500K_SINGLEINPUT_MEASURE_VOLTAGE) {
-					value = swapped * cvmt->voltage1[glp->g_l500k_si_config[0].v_range-1].range / cvmt->voltage1[glp->g_l500k_si_config[0].v_range-1].X;
-				} else if(glp->g_l500k_si_config[0].measure_mode == L500K_SINGLEINPUT_MEASURE_CURRENT) {
-					value = swapped * cvmt->current[glp->g_l500k_si_config[0].i_range-1].range / cvmt->current[glp->g_l500k_si_config[0].i_range-1].X;
-				}
-				//printf("%" PRId64 " * %.5f / %lld = %.9f\r\n", swapped, cvmt->voltage1[glp->g_l500k_si_config[0].v_range-1].range, cvmt->voltage1[glp->g_l500k_si_config[0].v_range-1].X, value);
+			if(glp->g_si_config[0].measure_mode == SINGLEINPUT_MEASURE_MODE_VOLTAGE) {
+				value = swapped * cvmt->voltage1[glp->g_si_config[0].range-1].range / cvmt->voltage1[glp->g_si_config[0].range-1].X;
+			} else if(glp->g_si_config[0].measure_mode == SINGLEINPUT_MEASURE_MODE_CURRENT) {
+				value = swapped * cvmt->current[glp->g_si_config[0].range-1].range / cvmt->current[glp->g_si_config[0].range-1].X;
 			}
 		}else if(demo_source == DEMO_INPUT_CH2) {
-			if(g_device_model == DEVICE_MODEL_M005M_VV) {
-				value = swapped * cvmt->voltage2[glp->g_vol_range2].range / cvmt->voltage2[glp->g_vol_range2].X;
-			}else if(g_device_model == DEVICE_MODEL_M005M_VI) {
-				value = swapped * cvmt->current[glp->g_cur_range].range / cvmt->current[glp->g_cur_range].X;
-			}else if(g_device_model == DEVICE_MODEL_M005M) {
-				if(glp->g_si_config[1].measure_mode == SINGLEINPUT_MEASURE_MODE_VOLTAGE) {
-					value = swapped * cvmt->voltage2[glp->g_si_config[1].range-1].range / cvmt->voltage2[glp->g_si_config[1].range-1].X;
-				} else if(glp->g_si_config[1].measure_mode == SINGLEINPUT_MEASURE_MODE_CURRENT) {
-					value = swapped * cvmt->current[glp->g_si_config[1].range-1].range / cvmt->current[glp->g_si_config[1].range-1].X;
-				}
-			}else if(g_device_model == DEVICE_MODEL_L500K) {
-				if(glp->g_l500k_si_config[1].measure_mode == L500K_SINGLEINPUT_MEASURE_VOLTAGE) {
-					value = swapped * cvmt->voltage2[glp->g_l500k_si_config[1].v_range-1].range / cvmt->voltage2[glp->g_l500k_si_config[1].v_range-1].X;
-				} else if(glp->g_l500k_si_config[1].measure_mode == L500K_SINGLEINPUT_MEASURE_CURRENT) {
-					value = swapped * cvmt->current[glp->g_l500k_si_config[1].i_range-1].range / cvmt->current[glp->g_l500k_si_config[1].i_range-1].X;
-				}
+			if(glp->g_si_config[1].measure_mode == SINGLEINPUT_MEASURE_MODE_VOLTAGE) {
+				value = swapped * cvmt->voltage2[glp->g_si_config[1].range-1].range / cvmt->voltage2[glp->g_si_config[1].range-1].X;
+			} else if(glp->g_si_config[1].measure_mode == SINGLEINPUT_MEASURE_MODE_CURRENT) {
+				value = swapped * cvmt->current[glp->g_si_config[1].range-1].range / cvmt->current[glp->g_si_config[1].range-1].X;
 			}
 		}
 		break;
 	case DAQ_SOURCE_KIND_Y:
 		if(demo_source == DEMO_INPUT_CH1) {
-			if(g_device_model == DEVICE_MODEL_M005M_VV || g_device_model == DEVICE_MODEL_M005M_VI) {
-				 value = swapped * cvmt->voltage1[glp->g_vol_range1].range / cvmt->voltage1[glp->g_vol_range1].Y;
-			}else if(g_device_model == DEVICE_MODEL_M005M) {
-				if(glp->g_si_config[0].measure_mode == SINGLEINPUT_MEASURE_MODE_VOLTAGE) {
-					value = swapped * cvmt->voltage1[glp->g_si_config[0].range-1].range / cvmt->voltage1[glp->g_si_config[0].range-1].Y;
-				} else if(glp->g_si_config[0].measure_mode == SINGLEINPUT_MEASURE_MODE_CURRENT) {
-					value = swapped * cvmt->current[glp->g_si_config[0].range-1].range / cvmt->current[glp->g_si_config[0].range-1].Y;
-				}
-			}else if(g_device_model == DEVICE_MODEL_L500K) {
-				if(glp->g_l500k_si_config[0].measure_mode == L500K_SINGLEINPUT_MEASURE_VOLTAGE) {
-					value = swapped * cvmt->voltage1[glp->g_l500k_si_config[0].v_range-1].range / cvmt->voltage1[glp->g_l500k_si_config[0].v_range-1].Y;
-				} else if(glp->g_l500k_si_config[0].measure_mode == L500K_SINGLEINPUT_MEASURE_CURRENT) {
-					value = swapped * cvmt->current[glp->g_l500k_si_config[0].i_range-1].range / cvmt->current[glp->g_l500k_si_config[0].i_range-1].Y;
-				}
+			if(glp->g_si_config[0].measure_mode == SINGLEINPUT_MEASURE_MODE_VOLTAGE) {
+				value = swapped * cvmt->voltage1[glp->g_si_config[0].range-1].range / cvmt->voltage1[glp->g_si_config[0].range-1].Y;
+			} else if(glp->g_si_config[0].measure_mode == SINGLEINPUT_MEASURE_MODE_CURRENT) {
+				value = swapped * cvmt->current[glp->g_si_config[0].range-1].range / cvmt->current[glp->g_si_config[0].range-1].Y;
 			}
 		}else if(demo_source == DEMO_INPUT_CH2) {
-			if(g_device_model == DEVICE_MODEL_M005M_VV) {
-				value = swapped * cvmt->voltage2[glp->g_vol_range2].range / cvmt->voltage2[glp->g_vol_range2].Y;
-			}else if(g_device_model == DEVICE_MODEL_M005M_VI) {
-				value = swapped * cvmt->current[glp->g_cur_range].range / cvmt->current[glp->g_cur_range].Y;
-			}else if(g_device_model == DEVICE_MODEL_M005M) {
-				if(glp->g_si_config[1].measure_mode == SINGLEINPUT_MEASURE_MODE_VOLTAGE) {
-					value = swapped * cvmt->voltage2[glp->g_si_config[1].range-1].range / cvmt->voltage2[glp->g_si_config[1].range-1].Y;
-				} else if(glp->g_si_config[1].measure_mode == SINGLEINPUT_MEASURE_MODE_CURRENT) {
-					value = swapped * cvmt->current[glp->g_si_config[1].range-1].range / cvmt->current[glp->g_si_config[1].range-1].Y;
-				}
-			}else if(g_device_model == DEVICE_MODEL_L500K) {
-				if(glp->g_l500k_si_config[1].measure_mode == L500K_SINGLEINPUT_MEASURE_VOLTAGE) {
-					value = swapped * cvmt->voltage2[glp->g_l500k_si_config[1].v_range-1].range / cvmt->voltage2[glp->g_l500k_si_config[1].v_range-1].Y;
-				} else if(glp->g_l500k_si_config[1].measure_mode == L500K_SINGLEINPUT_MEASURE_CURRENT) {
-					value = swapped * cvmt->current[glp->g_l500k_si_config[1].i_range-1].range / cvmt->current[glp->g_l500k_si_config[1].i_range-1].Y;
-				}
+			if(glp->g_si_config[1].measure_mode == SINGLEINPUT_MEASURE_MODE_VOLTAGE) {
+				value = swapped * cvmt->voltage2[glp->g_si_config[1].range-1].range / cvmt->voltage2[glp->g_si_config[1].range-1].Y;
+			} else if(glp->g_si_config[1].measure_mode == SINGLEINPUT_MEASURE_MODE_CURRENT) {
+				value = swapped * cvmt->current[glp->g_si_config[1].range-1].range / cvmt->current[glp->g_si_config[1].range-1].Y;
 			}
 		}
 		break;
 	case DAQ_SOURCE_KIND_R:
 		if(demo_source == DEMO_INPUT_CH1) {
-			if(g_device_model == DEVICE_MODEL_M005M_VV || g_device_model == DEVICE_MODEL_M005M_VI) {
-				value = swapped * cvmt->voltage1[glp->g_vol_range1].range / cvmt->voltage1[glp->g_vol_range1].R;
-			}else if(g_device_model == DEVICE_MODEL_M005M) {
-				if(glp->g_si_config[0].measure_mode == SINGLEINPUT_MEASURE_MODE_VOLTAGE) {
-					value = swapped * cvmt->voltage1[glp->g_si_config[0].range-1].range / cvmt->voltage1[glp->g_si_config[0].range-1].R;
-				} else if(glp->g_si_config[0].measure_mode == SINGLEINPUT_MEASURE_MODE_CURRENT) {
-					value = swapped * cvmt->current[glp->g_si_config[0].range-1].range / cvmt->current[glp->g_si_config[0].range-1].R;
-				}
-			}else if(g_device_model == DEVICE_MODEL_L500K) {
-				//P_LOG_DEBUG("swapped: 0x%016" PRIx64 "\r\n", (uint64_t)swapped);
-				//P_LOG_DEBUG("L500K R demo source 1 measure mode: %d", glp->g_l500k_si_config[0].measure_mode);
-				if(glp->g_l500k_si_config[0].measure_mode == L500K_SINGLEINPUT_MEASURE_VOLTAGE) {
-					value = swapped * cvmt->voltage1[glp->g_l500k_si_config[0].v_range-1].range / cvmt->voltage1[glp->g_l500k_si_config[0].v_range-1].R;
-					//P_LOG_DEBUG("value: %.9f\r\n", value);
-				} else if(glp->g_l500k_si_config[0].measure_mode == L500K_SINGLEINPUT_MEASURE_CURRENT) {
-					value = swapped * cvmt->current[glp->g_l500k_si_config[0].i_range-1].range / cvmt->current[glp->g_l500k_si_config[0].i_range-1].R;
-				}
+			if(glp->g_si_config[0].measure_mode == SINGLEINPUT_MEASURE_MODE_VOLTAGE) {
+				value = swapped * cvmt->voltage1[glp->g_si_config[0].range-1].range / cvmt->voltage1[glp->g_si_config[0].range-1].R;
+			} else if(glp->g_si_config[0].measure_mode == SINGLEINPUT_MEASURE_MODE_CURRENT) {
+				value = swapped * cvmt->current[glp->g_si_config[0].range-1].range / cvmt->current[glp->g_si_config[0].range-1].R;
 			}
 			//printf("%" PRId64 " * %.5f / %lld = %.9f\r\n", swapped, cvmt->voltage1[glp->g_l500k_si_config[0].v_range-1].range, cvmt->voltage1[glp->g_l500k_si_config[0].v_range-1].R, value);
 		}else if(demo_source == DEMO_INPUT_CH2) {
-			if(g_device_model == DEVICE_MODEL_M005M_VV) {
-				value = swapped * cvmt->voltage2[glp->g_vol_range2].range / cvmt->voltage2[glp->g_vol_range2].R;
-			}else if(g_device_model == DEVICE_MODEL_M005M_VI) {
-				value = swapped * cvmt->current[glp->g_cur_range].range / cvmt->current[glp->g_cur_range].R;
-			}else if(g_device_model == DEVICE_MODEL_M005M) {
-				if(glp->g_si_config[1].measure_mode == SINGLEINPUT_MEASURE_MODE_VOLTAGE) {
-					value = swapped * cvmt->voltage2[glp->g_si_config[1].range-1].range / cvmt->voltage2[glp->g_si_config[1].range-1].R;
-				} else if(glp->g_si_config[1].measure_mode == SINGLEINPUT_MEASURE_MODE_CURRENT) {
-					value = swapped * cvmt->current[glp->g_si_config[1].range-1].range / cvmt->current[glp->g_si_config[1].range-1].R;
-				}
-			}else if(g_device_model == DEVICE_MODEL_L500K) {
-				if(glp->g_l500k_si_config[1].measure_mode == L500K_SINGLEINPUT_MEASURE_VOLTAGE) {
-					value = swapped * cvmt->voltage2[glp->g_l500k_si_config[1].v_range-1].range / cvmt->voltage2[glp->g_l500k_si_config[1].v_range-1].R;
-				} else if(glp->g_l500k_si_config[1].measure_mode == L500K_SINGLEINPUT_MEASURE_CURRENT) {
-					value = swapped * cvmt->current[glp->g_l500k_si_config[1].i_range-1].range / cvmt->current[glp->g_l500k_si_config[1].i_range-1].R;
-				}
+			if(glp->g_si_config[1].measure_mode == SINGLEINPUT_MEASURE_MODE_VOLTAGE) {
+				value = swapped * cvmt->voltage2[glp->g_si_config[1].range-1].range / cvmt->voltage2[glp->g_si_config[1].range-1].R;
+			} else if(glp->g_si_config[1].measure_mode == SINGLEINPUT_MEASURE_MODE_CURRENT) {
+				value = swapped * cvmt->current[glp->g_si_config[1].range-1].range / cvmt->current[glp->g_si_config[1].range-1].R;
 			}
 		}
 		break;
 	case DAQ_SOURCE_KIND_Q:
 		value = swapped * (180.0 / (double)(1LL << 45)); //+/-180
-		break;
-	case DAQ_SOURCE_KIND_PCNT:
-		value = swapped;
-		break;
-	case DAQ_SOURCE_KIND_AUXOUT:
-		/* AUXOUT uses an unsigned 20-bit code: 0..0xFFFFF maps to -10 V..+10 V. */
-		value = ((double)(swapped_u & 0xFFFFFULL) * 20.0) / ((double)((1ULL << 20) - 1));
-		value -= 10;
-		break;
-	case DAQ_SOURCE_KIND_AUXIN:
-		/* AUXIN uses the lower 16 bits as a signed code: bit15 is sign, +/-10 V full scale. */
-		aux_code = (int16_t)(swapped_u & 0xFFFFULL);
-		value = ((double)aux_code * 10.0) / ((double)((1ULL << 15) - 1));
-		if(g_device_model == DEVICE_MODEL_L500K) {
-			value = auxin_l500k_calibrate_value(source_index, value);
-		}
 		break;
 	default:
 		break;
@@ -505,8 +393,6 @@ static double load_double_swap32(const void *p, int source)
 
     return value;
 }
-
-
 
 static inline int32_t load_i32(const void *p)
 {
@@ -532,46 +418,21 @@ static double scope_signal_input_to_value(int32_t temp, int channel, gLobalParam
 	double v = 0.0;
 
 	if(channel == 0) {
-		if(g_device_model == DEVICE_MODEL_M005M_VV || g_device_model == DEVICE_MODEL_M005M_VI) {
-			v = temp * cvmt->voltage1[glp->g_vol_range1].range / cvmt->voltage1[glp->g_vol_range1].R1;
-		} else if(g_device_model == DEVICE_MODEL_M005M) {
-			if(glp->g_si_config[0].measure_mode == SINGLEINPUT_MEASURE_MODE_VOLTAGE) {
-				v = temp * cvmt->voltage1[glp->g_si_config[0].range - 1].range / cvmt->voltage1[glp->g_si_config[0].range - 1].R1;
-			} else if(glp->g_si_config[0].measure_mode == SINGLEINPUT_MEASURE_MODE_CURRENT) {
-				v = temp * cvmt->current[glp->g_si_config[0].range - 1].range / cvmt->current[glp->g_si_config[0].range - 1].R1;
-			} else {
-				P_LOG_ERROR("load_double: unknown M005M ch1 measure mode %d", glp->g_si_config[0].measure_mode);
-			}
-		} else if(g_device_model == DEVICE_MODEL_L500K) {
-			if(glp->g_l500k_si_config[0].measure_mode == L500K_SINGLEINPUT_MEASURE_VOLTAGE) {
-				v = temp * cvmt->voltage1[glp->g_l500k_si_config[0].v_range - 1].range / cvmt->voltage1[glp->g_l500k_si_config[0].v_range - 1].R1;
-			} else if(glp->g_l500k_si_config[0].measure_mode == L500K_SINGLEINPUT_MEASURE_CURRENT) {
-				v = temp * cvmt->current[glp->g_l500k_si_config[0].i_range - 1].range / cvmt->current[glp->g_l500k_si_config[0].i_range - 1].R1;
-			} else {
-				P_LOG_ERROR("load_double: unknown L500K ch1 measure mode %d", glp->g_l500k_si_config[0].measure_mode);
-			}
+		if(glp->g_si_config[0].measure_mode == SINGLEINPUT_MEASURE_MODE_VOLTAGE) {
+			v = temp * cvmt->voltage1[glp->g_si_config[0].range - 1].range / cvmt->voltage1[glp->g_si_config[0].range - 1].R1;
+		} else if(glp->g_si_config[0].measure_mode == SINGLEINPUT_MEASURE_MODE_CURRENT) {
+			v = temp * cvmt->current[glp->g_si_config[0].range - 1].range / cvmt->current[glp->g_si_config[0].range - 1].R1;
+		} else {
+			P_LOG_ERROR("load_double: unknown M005M ch1 measure mode %d", glp->g_si_config[0].measure_mode);
 		}
+
 	} else if(channel == 1) {
-		if(g_device_model == DEVICE_MODEL_M005M_VV) {
-			v = temp * cvmt->voltage2[glp->g_vol_range2].range / cvmt->voltage2[glp->g_vol_range2].R1;
-		} else if(g_device_model == DEVICE_MODEL_M005M_VI) {
-			v = temp * cvmt->current[glp->g_cur_range].range / cvmt->current[glp->g_cur_range].R1;
-		} else if(g_device_model == DEVICE_MODEL_M005M) {
-			if(glp->g_si_config[1].measure_mode == SINGLEINPUT_MEASURE_MODE_VOLTAGE) {
-				v = temp * cvmt->voltage1[glp->g_si_config[1].range - 1].range / cvmt->voltage1[glp->g_si_config[1].range - 1].R1;
-			} else if(glp->g_si_config[1].measure_mode == SINGLEINPUT_MEASURE_MODE_CURRENT) {
-				v = temp * cvmt->current[glp->g_si_config[1].range - 1].range / cvmt->current[glp->g_si_config[1].range - 1].R1;
-			} else {
-				P_LOG_ERROR("load_double: unknown M005M ch2 measure mode %d", glp->g_si_config[1].measure_mode);
-			}
-		} else if(g_device_model == DEVICE_MODEL_L500K) {
-			if(glp->g_l500k_si_config[1].measure_mode == L500K_SINGLEINPUT_MEASURE_VOLTAGE) {
-				v = temp * cvmt->voltage1[glp->g_l500k_si_config[1].v_range - 1].range / cvmt->voltage1[glp->g_l500k_si_config[1].v_range - 1].R1;
-			} else if(glp->g_l500k_si_config[1].measure_mode == L500K_SINGLEINPUT_MEASURE_CURRENT) {
-				v = temp * cvmt->current[glp->g_l500k_si_config[1].i_range - 1].range / cvmt->current[glp->g_l500k_si_config[1].i_range - 1].R1;
-			} else {
-				P_LOG_ERROR("load_double: unknown L500K ch2 measure mode %d", glp->g_l500k_si_config[1].measure_mode);
-			}
+		if(glp->g_si_config[1].measure_mode == SINGLEINPUT_MEASURE_MODE_VOLTAGE) {
+			v = temp * cvmt->voltage1[glp->g_si_config[1].range - 1].range / cvmt->voltage1[glp->g_si_config[1].range - 1].R1;
+		} else if(glp->g_si_config[1].measure_mode == SINGLEINPUT_MEASURE_MODE_CURRENT) {
+			v = temp * cvmt->current[glp->g_si_config[1].range - 1].range / cvmt->current[glp->g_si_config[1].range - 1].R1;
+		} else {
+			P_LOG_ERROR("load_double: unknown M005M ch2 measure mode %d", glp->g_si_config[1].measure_mode);
 		}
 	}
 
@@ -589,63 +450,31 @@ double load_double(const void *p)
 
 	memcpy(&temp, p, sizeof(temp)); /* avoid unaligned access */
 
-	if(g_device_model == DEVICE_MODEL_L500K) {
-		switch(glp->g_scope_source) {
-		case SCOPE_SOURCE_SIGNALIN1:
-			v = scope_signal_input_to_value(temp, 0, glp, cvmt);
-			break;
-		case SCOPE_SOURCE_SIGNALIN2:
-			v = scope_signal_input_to_value(temp, 1, glp, cvmt);
-			break;
-		case SCOPE_SOURCE_AUXIN1:
-		case SCOPE_SOURCE_AUXIN2:
-		case SCOPE_SOURCE_AUXIN3:
-		case SCOPE_SOURCE_AUXIN4:
-			/* AUXIN uses a sign-extended 16-bit code: -32768..32767 maps to about -10 V..+10 V. */
-			v = (double)(temp * 10.0) / ((double)((1ULL << 15) - 1));
-			v = auxin_l500k_calibrate_value((unsigned)(glp->g_scope_source - SCOPE_SOURCE_AUXIN1), v);
-			break;
-		case SCOPE_SOURCE_L500K_REFIN1:
-		case SCOPE_SOURCE_L500K_REFIN2:
-			/* REFIN uses a sign-extended 16-bit code: -32768..32767 maps to about -2.5 V..+2.5 V. */
-			v = (double)(temp * 2.5) / ((double)((1ULL << 15) - 1));
-			break;
-		case SCOPE_SOURCE_L500K_TRIG1:
-		case SCOPE_SOURCE_L500K_TRIG2:
-		case SCOPE_SOURCE_L500K_TRIG3:
-		case SCOPE_SOURCE_L500K_TRIG4:
-			v = scope_logic_level(temp);
-			break;
-		default:
-			P_LOG_ERROR("load_double: unknown L500K scope source %d", glp->g_scope_source);
-			break;
-		}
-	} else if(g_device_model == DEVICE_MODEL_M005M_VV
-			  || g_device_model == DEVICE_MODEL_M005M_VI
-			  || g_device_model == DEVICE_MODEL_M005M) {
-		switch(glp->g_scope_source) {
-		case SCOPE_SOURCE_SIGNALIN1:
-			v = scope_signal_input_to_value(temp, 0, glp, cvmt);
-			break;
-		case SCOPE_SOURCE_SIGNALIN2:
-			v = scope_signal_input_to_value(temp, 1, glp, cvmt);
-			break;
-		case SCOPE_SOURCE_AUXIN1:
-		case SCOPE_SOURCE_AUXIN2:
-		case SCOPE_SOURCE_AUXIN3:
-		case SCOPE_SOURCE_AUXIN4:
-			v = scope_aux_like_to_voltage(temp);
-			break;
-		case SCOPE_SOURCE_TRIG1:
-		case SCOPE_SOURCE_TRIG2:
-			v = scope_logic_level(temp);
-			break;
-		default:
-			P_LOG_ERROR("load_double: unknown M005M scope source %d", glp->g_scope_source);
-			break;
-		}
-	} else {
-		P_LOG_ERROR("load_double: unsupported device model %d", g_device_model);
+	switch(glp->g_scope_source) {
+	case SCOPE_SOURCE_SIGNALIN1:
+		v = scope_signal_input_to_value(temp, 0, glp, cvmt);
+		break;
+	case SCOPE_SOURCE_SIGNALIN2:
+		v = scope_signal_input_to_value(temp, 1, glp, cvmt);
+		break;
+	case SCOPE_SOURCE_REFOSC: break;
+	case SCOPE_SOURCE_SINOUT1: break;
+	case SCOPE_SOURCE_SINOUT2: break;
+	case SCOPE_SOURCE_DEMODX: break;
+	case SCOPE_SOURCE_DEMODY: break;
+	case SCOPE_SOURCE_DEMODR: break;
+	case SCOPE_SOURCE_DEMODQ: break;
+	case SCOPE_SOURCE_PIDUT1: break;
+	case SCOPE_SOURCE_PIDUT2: break;
+	case SCOPE_SOURCE_PIDUT3: break;
+	case SCOPE_SOURCE_PIDUT4: break;
+	case SCOPE_SOURCE_PIDERROR1: break;
+	case SCOPE_SOURCE_PIDERROR2: break;
+	case SCOPE_SOURCE_PIDERROR3: break;
+	case SCOPE_SOURCE_PIDERROR4: break;
+	default:
+		P_LOG_ERROR("load_double: unknown scope source %d", glp->g_scope_source);
+		break;
 	}
 
 	return v;
@@ -1025,7 +854,7 @@ void read_from_dma_to_ringbuff(uint32_t size, int32_t ch_type)
 				printf("dma read failed\r\n");
 			}
 
-			channel_list_l[0] = CH57_SCOPE_CH1;
+			channel_list_l[0] = CH_SCOPE_CH1;
 			demux_one_frame(ctx->channel[0].rxbuff, total_bytes, channel_list_l, source_lowcnt, CH_SCOPE);
 
 		}
@@ -1039,7 +868,7 @@ void read_from_dma_to_ringbuff(uint32_t size, int32_t ch_type)
 				printf("dma read failed\r\n");
 			}
 
-			channel_list_h[0] = CH58_SCOPE_CH2;
+			channel_list_h[0] = CH_SCOPE_CH2;
 			demux_one_frame(ctx->channel[high_dma_ch].rxbuff, total_bytes, channel_list_h, source_highcnt, CH_SCOPE);
 
 		}
@@ -1161,7 +990,7 @@ void read_bd_from_dma_to_ringbuff(uint32_t size, int32_t ch_type)
 				printf("dma read failed\r\n");
 			}
 
-			channel_list_l[0] = CH57_SCOPE_CH1;
+			channel_list_l[0] = CH_SCOPE_CH1;
 			demux_one_frame(ctx->channel[0].rxbuff, total_bytes, channel_list_l, source_lowcnt, CH_SCOPE);
 
 		}
@@ -1175,7 +1004,7 @@ void read_bd_from_dma_to_ringbuff(uint32_t size, int32_t ch_type)
 				printf("dma read failed\r\n");
 			}
 
-			channel_list_h[0] = CH58_SCOPE_CH2;
+			channel_list_h[0] = CH_SCOPE_CH2;
 			demux_one_frame(ctx->channel[high_dma_ch].rxbuff, total_bytes, channel_list_h, source_highcnt, CH_SCOPE);
 
 		}
@@ -1236,7 +1065,7 @@ void read_nbd_from_dma_to_ringbuff(uint32_t single_freame_size, int32_t ch_type)
 			dmapack_size = MIN(dmapack_size, total_bytes);
 			packs_int = total_bytes / dmapack_size;
 			packs_remain = total_bytes % dmapack_size;
-			channel_list_l[0] = CH57_SCOPE_CH1;
+			channel_list_l[0] = CH_SCOPE_CH1;
 
 			printf("dmapacksize: %d, packs: %d = %d / %d, remain: %d\r\n", dmapack_size, packs_int, total_bytes, dmapack_size, packs_remain);
 
@@ -1305,7 +1134,7 @@ void read_nbd_from_dma_to_ringbuff(uint32_t single_freame_size, int32_t ch_type)
 			int high_dma_ch = datatask_high_dma_channel_index();
 			total_bytes = single_freame_size * source_highcnt;
 			axidma_oneway_transfer(ctx->dev, ctx->channel[high_dma_ch].rx_channel, ctx->channel[high_dma_ch].rxbuff, total_bytes, true);
-			channel_list_h[0] = CH58_SCOPE_CH2;
+			channel_list_h[0] = CH_SCOPE_CH2;
 			demux_one_frame(ctx->channel[high_dma_ch].rxbuff, total_bytes, channel_list_h, source_highcnt, CH_SCOPE);
 		}
 	}

@@ -1,7 +1,6 @@
 # 工程配置
 PROJECT = zwlia
 INCLUDE_SCPI = scpi
-INCLUDE_TIRPC = tirpc
 INCLUDE_HISLIP = hislip
 BUILD_DIR = build
 
@@ -15,8 +14,8 @@ OBJ_DIR = $(BUILD_DIR)/$(ARCH)/obj
 BIN_DIR = $(BUILD_DIR)/$(ARCH)/bin
 TARGET = $(BIN_DIR)/$(PROJECT)
 
-CFLAGS = -Wall -Wextra -I$(INCLUDE_SCPI) -I$(INCLUDE_TIRPC) -I$(INCLUDE_HISLIP) -MMD $(ARCH_CFLAGS)
-LDFLAGS = $(ARCH_LDFLAGS) -lm -pthread -L$(LIB_DIR) -lscpi -ltirpc -Wl,--as-needed
+CFLAGS = -Wall -Wextra -I$(INCLUDE_SCPI) -I$(INCLUDE_HISLIP) -MMD $(ARCH_CFLAGS)
+LDFLAGS = $(ARCH_LDFLAGS) -lm -pthread -L$(LIB_DIR) -lscpi -Wl,--as-needed
 
 SRCS = $(shell find . -name '*.c')
 OBJS = $(SRCS:%.c=$(OBJ_DIR)/%.o)

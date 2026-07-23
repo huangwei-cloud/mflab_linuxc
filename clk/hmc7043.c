@@ -1,4 +1,5 @@
 #include "hmc7043.h"
+#include "lmk04828.h"
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <assert.h>
@@ -11,7 +12,7 @@
 AxiDevice plreg;
 AxiDevice bram1,bram2;
 AxiDevice hmc7044_1,hmc7044_2,hmc7044_3;
-AxiDevice ad4080_1,ad4080_2;
+AxiDevice ad4080_1,ad4080_2,ad9684;
 AxiDevice awg_ddr_ch1,awg_ddr_ch2;
 FrameFilter *g_frame_filter = NULL;
 extern int g_device_model;
@@ -50,6 +51,14 @@ void get_ad4080_2_intance(AxiDevice **pdev)
 
 	*pdev = &ad4080_2;
 }
+
+void get_ad9684_intance(AxiDevice **pdev)
+{
+	assert(pdev != NULL);
+
+	*pdev = &ad9684;
+}
+
 
 void get_awg_ddr_ch1_intance(AxiDevice **pdev)
 {
@@ -1512,134 +1521,15 @@ void hmc7044_config_lk(RefDirect rd)
 
 void init_mem()
 {
-	if( (g_device_model == DEVICE_MODEL_M005M_VV) || (g_device_model == DEVICE_MODEL_M005M_VI)) {
-		axi_device_init(&hmc7044_1, "HMC7044_1", 0x800A0000, 0x10000);
-		axi_device_init(&hmc7044_2, "HMC7044_2", 0x800B0000, 0x10000);
-		axi_device_init(&hmc7044_3, "HMC7044_3", 0x800C0000, 0x10000);
-		axi_device_init(&plreg, "PL-REG", 0x80020000, 0x10000);
-	} else if(g_device_model == DEVICE_MODEL_M005M) {
-		axi_device_init(&hmc7044_1, "HMC7044_1", 0x800A0000, 0x10000);
-		axi_device_init(&plreg, "PL-REG", 0x80020000, 0x10000);
-	} else if(g_device_model == DEVICE_MODEL_L500K) {
-		axi_device_init(&ad4080_1, "4080_1", 0x43C00000, 0x10000);
-		axi_device_init(&ad4080_2, "4080_2", 0x43C10000, 0x10000);
-		axi_device_init(&hmc7044_1, "HMC7044_1", 0x43C20000, 0x10000);
-		axi_device_init(&plreg, "PL-REG", 0x43C30000, 0x10000);
-		axi_device_init(&awg_ddr_ch1, "AWG-DDR-CH1", AWG_L500K_DDR_CH1_BASE, AWG_L500K_DDR_CH_SIZE);
-		axi_device_init(&awg_ddr_ch2, "AWG-DDR-CH2", AWG_L500K_DDR_CH2_BASE, AWG_L500K_DDR_CH_SIZE);
-	} else {
-
-	}
+	axi_device_init(&ad9684, "AD9684", 0x80010000, 0x10000);
+	axi_device_init(&plreg, "PL-REG", 0x80030000, 0x10000);
 
 	g_frame_filter = frame_filter_create(30000000);
-
 }
 
 int init_clk(RefClk rc)
 {
-	int timeout = 2;
-	int count = 0;
-	uint32_t lock;
-	RefDirect rd;
-	gLobalParam *glp = NULL;
-
-	get_global_param(&glp);
-
-    if(rc == INTERNAL_100M) {
-        gpio_set_value(11, 0);
-        gpio_set_value(21, 1);
-        gpio_set_value(22, 1);
-        rd = 0x00;
-    } else if(rc == EXTERN_100M){
-		gpio_set_value(11, 1);
-        gpio_set_value(21, 1);
-        gpio_set_value(22, 1);
-        rd = 0x00;
-    } else if(rc == EXTERN_10M){
-        gpio_set_value(11, 1);
-        gpio_set_value(21, 1);
-        gpio_set_value(22, 0);
-        rd = 0x01;
-    }
-
-
-	if( (g_device_model == DEVICE_MODEL_M005M_VV) || (g_device_model == DEVICE_MODEL_M005M_VI)) {
-		hmc7044_config1(rd);
-		hmc7044_config2(rd);
-		hmc7044_config3(rd);
-	}else if(g_device_model == DEVICE_MODEL_M005M) {
-		hmc7044_config_mm(rd);
-	}else if(g_device_model == DEVICE_MODEL_L500K) {
-		hmc7044_config_lk(rd);
-	}
-	//clk sync
-    gpio_set_value(8, 1);
-	gpio_set_value(10, 1);
-    gpio_set_value(9, 0);
-	gpio_set_value(9, 1);
-    gpio_set_value(9, 0);
-
-	glp->g_dev_lock_state = 0; //default no lock;
-
-	if( (g_device_model == DEVICE_MODEL_M005M_VV) || (g_device_model == DEVICE_MODEL_M005M_VI)) {
-		while(1) {
-			lock = hmc7044_read_reg(&hmc7044_1,0x7D);
-			if(lock == 0x00807D0D) {
-				printf("hmc7044_1 lock\r\n");
-				glp->g_dev_lock_state = 1; //lock;
-				break;
-			}else {
-				printf("hmc7044_1 unlock \r\n");
-			}
-			sleep(1);
-		    count++;
-		    if (count >= timeout) {
-		        printf("Timeout: hmc7044_1 not locked within %d seconds\r\n", timeout);
-		        return -1;
-		    }
-		}
-		while(1) {
-			lock = hmc7044_read_reg(&hmc7044_2,0x91);
-			if(lock == 0x00809102) {
-				printf("hmc7044_2 lock\r\n");
-				break;
-			}else {
-				printf("hmc7044_2 unlock\r\n");
-			}
-			sleep(1);
-		}
-		while(1) {
-			lock = hmc7044_read_reg(&hmc7044_3,0x91);
-			if(lock == 0x00809102) {
-				printf("hmc7044_3 lock\r\n");
-				break;
-			}else {
-				printf("hmc7044_3 unlock\r\n");
-			}
-			sleep(1);
-		}
-	}else if((g_device_model == DEVICE_MODEL_M005M) || (g_device_model == DEVICE_MODEL_L500K)) {
-		while(1) {
-			lock = hmc7044_read_reg(&hmc7044_1,0x7D);
-			if(lock == 0x00807D0D) {
-				printf("hmc7044_1 lock\r\n");
-				glp->g_dev_lock_state = 1; //lock;
-				break;
-			}else {
-				printf("hmc7044_1 unlock \r\n");
-			}
-			sleep(1);
-		    count++;
-		    if (count >= timeout) {
-		        printf("Timeout: hmc7044_1 not locked within %d seconds\r\n", timeout);
-		        return -1;
-		    }
-		}
-	}else {
-
-	}
-
-	return 0;
+	return lmk04828_init(rc);
 }
 
 

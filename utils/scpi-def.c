@@ -3641,13 +3641,20 @@ static uint32_t trig_source_from_compact_l500k(int32_t param)
 	return source;
 }
 
-static uint32_t trig_source_from_compact_by_model(int32_t param)
+static uint32_t trig_source_from_compact_mfilab(int32_t param)
 {
-	if(get_device_model() == DEVICE_MODEL_L500K) {
-		return trig_source_from_compact_l500k(param);
+	uint32_t source = (uint32_t)param + TS_SIGNALIN1;
+
+	if(source >= TS_SIGNALOUT1_PHASE && source <= TS_TRIGIN1) {
+		return source + 3;
 	}
 
-	return trig_source_from_compact_m005m(param);
+	return source;
+}
+
+static uint32_t trig_source_from_compact_by_model(int32_t param)
+{
+	return trig_source_from_compact_mfilab(param);
 }
 
 static scpi_result_t zwdx_set_daq_run_en(scpi_t *context)
@@ -7145,8 +7152,6 @@ void init_scpi_commands(void)
 		}
 	}
 	/*SignalOutput*/
-	//{.pattern = ":ZWLia:REFerence:PLL:SOURce", .callback = zwdx_set_refsource,},
-	//{.pattern = ":ZWLia:SIGNALout:OSC:SOURce", .callback = zwdx_set_so_oscsource,},
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:SIGNALout:OSC:FREQ", .callback = zwdx_set_so_oscfreq,};
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:SIGNALout:OSC:PHASE", .callback = zwdx_set_so_oscphase,};
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:SIGNALout:OSC:HARM", .callback = zwdx_set_so_oscharm,};
@@ -7196,7 +7201,7 @@ void init_scpi_commands(void)
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:DAQ:ADATA:QUERY?", .callback = zwdx_set_daq_adata_query,};
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:DAQ:RDATA:QUERY?", .callback = zwdx_set_daq_rdata_query,};
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:FRAME:DATA?", .callback = zwdx_set_frame_data_query,};
-	/*SCOPE*/
+	/*SCOPE-MFILAB*/
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:SCOPE:RUN:ENABLE", .callback = zwdx_set_scope_run_en,};
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:SCOPE:SIGNAL:ENABLE", .callback = zwdx_set_scope_signal_en,};
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:SCOPE:DATA:SR", .callback = zwdx_set_scope_sample_rate,};

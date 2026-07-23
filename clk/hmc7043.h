@@ -46,6 +46,8 @@ void get_ad4080_1_intance(AxiDevice **pdev);
 
 void get_ad4080_2_intance(AxiDevice **pdev);
 
+void get_ad9684_intance(AxiDevice **pdev);
+
 void get_awg_ddr_ch1_intance(AxiDevice **pdev);
 
 void get_awg_ddr_ch2_intance(AxiDevice **pdev);

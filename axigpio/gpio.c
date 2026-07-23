@@ -1599,6 +1599,7 @@ int gpio_get_value(int emio_gpio_num)
 
     return (buf[0] == '0') ? 0 : 1;
 }
+
 int reset_gpio()
 {
 	int i;

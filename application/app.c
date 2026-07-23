@@ -22,7 +22,7 @@
 #include "../axigpio/gpio.h"
 #include "../clk/reg.h"
 #include "../dac/dac3283.h"
-#include "../adc/adc4080.h"
+#include "../adc/adc9684.h"
 #include "../task/datatask.h"
 #include "../pm/param.h"
 #include "../utils/scpi-def.h"
@@ -145,7 +145,7 @@ void tcp_data_server_thread(void *arg)
 			continue;
 		}
 
-		for (int ch = CH1_X1; ch < CH_MAX; ++ch) {
+		for (int ch = CH_X1; ch < CH_MAX; ++ch) {
 			if (frame_buffer_read(frb_daq + ch, (uint8_t*)send_buffer, &frame_len, &frame_id)) {
 				TcpHdr hdr;
 				hdr.magic		= htonl(0xABCD1234);
@@ -223,7 +223,7 @@ void *udp_server_thread(void *arg)
     printf("Received from %s:%d -> %s\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port), recv_buffer);
 
     while (1) {
-		for(ch = CH1_X1; ch < CH_MAX; ch++) {
+		for(ch = CH_X1; ch < CH_MAX; ch++) {
 			if (frame_buffer_read(frb_daq+ch, (uint8_t *)send_buffer, &frame_len, &frame_id)) {
 	            int num_packets = (frame_len + UDP_PACKET_SIZE - 1) / UDP_PACKET_SIZE;
 
@@ -403,7 +403,7 @@ void init()
 	pthread_t hisliptid, udptid, bramtid, udpcmdid, extclkid, paramid, scanid;
 	
 	init_system_param();
-	init_calib_param();
+	// init_calib_param();
 
 	plog_init(
         P_LOG_LEVEL_DEBUG |
@@ -412,41 +412,37 @@ void init()
         P_LOG_LEVEL_ERROR |
         P_LOG_LEVEL_FATAL);
 
-	kfifo_init();
+	// kfifo_init();
 	init_reg();
 	init_scpi_commands();
 
 	reset_gpio();
 	init_mem();
 	init_clk(INTERNAL_100M);
-	init_adc4080();
-	init_dac3283();
-	init_gpio();
+	init_adc9684();
+
 	init_dma();
-	if (start_hislip_service() != 0) {
-		fprintf(stderr, "start HiSLIP service failed\r\n");
-		exit(1);
-	}
-	init_fan_speed(5000.0);
-	init_param();
-	init_default_param();
+	start_hislip_service();
 
-	//pthread_create(&udptid, NULL, udp_server_thread, NULL);
-	pthread_create(&udptid, NULL, tcp_data_server_thread, NULL);
+	init_fan_speed(2500.0);
+	// init_param();
+	// init_default_param();
 
-	pthread_create(&udpcmdid, NULL, udp_cmd_thread, NULL);
+	// pthread_create(&udptid, NULL, tcp_data_server_thread, NULL);
 
-	pthread_create(&bramtid, NULL, data_server_thread, NULL);
+	// pthread_create(&udpcmdid, NULL, udp_cmd_thread, NULL);
 
-	pthread_create(&extclkid, NULL, clk_thread, NULL);
+	// pthread_create(&bramtid, NULL, data_server_thread, NULL);
 
-	pthread_create(&paramid, NULL, param_thread, NULL);
+	// pthread_create(&extclkid, NULL, clk_thread, NULL);
 
-	pthread_create(&scanid, NULL, &scan_thread, NULL);
+	// pthread_create(&paramid, NULL, param_thread, NULL);
+
+	// pthread_create(&scanid, NULL, &scan_thread, NULL);
 
 	pthread_create(&hisliptid, NULL, hislip_service_thread, NULL);
 
-	printf("init config finish...\r\n");
+	// printf("init config finish...\r\n");
 
 
 }
@@ -455,7 +451,7 @@ void dev_clk_switch(RefClk rc)
 {
 	reset_gpio();
 	init_clk(rc);
-	init_adc4080();
+	init_adc9684();
 	init_dac3283();
 	init_gpio();
 
