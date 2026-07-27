@@ -5,11 +5,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#define AWG_L500K_DDR_CH1_BASE  0x80000000U
-#define AWG_L500K_DDR_CH2_BASE  0x88000000U
-#define AWG_L500K_DDR_CH_SIZE   0x08000000U
-
-#define AWG_QUEUE_MAX_STEPS  64    // ¶ÓÁĞÀï×î¶à 32 ¶Î
+#define AWG_QUEUE_MAX_STEPS  64    // é˜Ÿåˆ—é‡Œæœ€å¤š 64 æ®µ
 
 typedef enum {
     AWG_CH1 = 0,
@@ -17,25 +13,19 @@ typedef enum {
     AWG_CH_MAX
 } awg_channel_t;
 
-typedef enum {
-    AWG_PLAY_SINGLE = 1,   // µ¥´Î/Á¬Ğø²¥·ÅÒ»¸ö²¨ĞÎ£¨ÓÉ repeat ¾ö¶¨£©
-    AWG_PLAY_QUEUE  = 2,   // ¶ÓÁĞ²¥·Å
-} awg_play_mode_t;
-
-
-/* ¶ÓÁĞÖĞµÄÒ»¸ö²¥·Å¶Î */
+/* é˜Ÿåˆ—ä¸­çš„ä¸€ä¸ªæ’­æ”¾æ®µ */
 typedef struct {
-    uint32_t start_addr;   // AWG ÎïÀíÆğÊ¼µØÖ·
-    uint32_t length;       // ²¨ĞÎ³¤¶È£¨µãÊı or ×Ö½Ú£©
-    uint32_t repeat;       // ²¥·Å´ÎÊı£¬0 ±íÊ¾ÎŞÏŞÑ­»·£¨¶Ôµ¥´ÎÄ£Ê½¿ÉÒÔÓÃ 0=Á¬Ğø£©
-    uint32_t wait_us;      // µ±Ç°¶Î½áÊøºóµÈ´ıÊ±¼ä£¨Î¢Ãë£©
-	uint32_t play_num;      // µ±Ç°ĞòÁĞµÄ²¥·ÅºÅ£¬ÀıÈçµÚÒ»¸öĞòÁĞ¿ÉÄÜ·Å×îºó²¥·Å
+    uint32_t start_addr;   // AWG èµ·å§‹åœ°å€
+    uint32_t length;       // æ³¢å½¢é•¿åº¦
+    uint32_t repeat;       // æ’­æ”¾æ¬¡æ•°ï¼Œ0 è¡¨ç¤ºæ— é™å¾ªç¯
+    uint32_t wait_us;      // å½“å‰æ®µç»“æŸåç­‰å¾…æ—¶é—´ï¼ˆå¾®ç§’ï¼‰
+    uint32_t play_num;     // å½“å‰é˜Ÿåˆ—æ’­æ”¾é¡ºåºç¼–å·ï¼Œä» 0 å¼€å§‹
 } awg_queue_step_t;
 
-/* µ±Ç° AWG ²¥·ÅÅäÖÃ */
+/* å½“å‰ AWG æ’­æ”¾é…ç½® */
 typedef struct {
-    awg_play_mode_t  mode;                // AWG_PLAY_SINGLE / AWG_PLAY_QUEUE
-    uint32_t         queue_count;         // ¶ÓÁĞÓĞĞ§¸öÊı
+    uint32_t         mode;        // å¯„å­˜å™¨å€¼ï¼š1 è¿ç»­æ’­æ”¾ï¼Œ2 è§¦å‘å…¨éƒ¨é˜Ÿåˆ—ï¼Œ3 è§¦å‘ä¸€ä¸ªé˜Ÿåˆ—ï¼Œ4 è§¦å‘å•æ¬¡æŒ‰åºæ’­æ”¾
+    uint32_t         queue_count; // é˜Ÿåˆ—æœ‰æ•ˆä¸ªæ•°
     awg_queue_step_t queue[AWG_QUEUE_MAX_STEPS];
 } awg_play_config_t;
 
@@ -48,4 +38,3 @@ void init_awg_ctx();
 void awg_data_send(uint32_t chnum, uint8_t *buff, uint32_t size);
 
 #endif
-

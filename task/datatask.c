@@ -195,7 +195,7 @@ void read_from_dma_to_fifo(uint32_t size)
 
 #define MAX_SAMPLES_PER_CH      SAMPLE_POINT_MAX  // configured for the maximum possible value
 #define DAQ_BYTES_PER_SAMPLE    8
-#define SCOPE_BYTES_PER_SAMPLE  4
+#define SCOPE_BYTES_PER_SAMPLE  2
 #define SAMPLES_PER_BLOCK       4                         // 4 samples per channel in each block
 #define DAQ_BLOCK_BYTES        (SAMPLES_PER_BLOCK * DAQ_BYTES_PER_SAMPLE)
 #define SCOPE_BLOCK_BYTES      (SAMPLES_PER_BLOCK * SCOPE_BYTES_PER_SAMPLE)
@@ -340,48 +340,24 @@ static double load_double_swap32(const void *p, int source)
 	switch(source_kind) {
 	case DAQ_SOURCE_KIND_X:
 		if(demo_source == DEMO_INPUT_CH1) {
-			if(glp->g_si_config[0].measure_mode == SINGLEINPUT_MEASURE_MODE_VOLTAGE) {
-				value = swapped * cvmt->voltage1[glp->g_si_config[0].range-1].range / cvmt->voltage1[glp->g_si_config[0].range-1].X;
-			} else if(glp->g_si_config[0].measure_mode == SINGLEINPUT_MEASURE_MODE_CURRENT) {
-				value = swapped * cvmt->current[glp->g_si_config[0].range-1].range / cvmt->current[glp->g_si_config[0].range-1].X;
-			}
+			value = swapped * cvmt->voltage1[glp->g_siginput_config[0].range-1].range / cvmt->voltage1[glp->g_siginput_config[0].range-1].X;
 		}else if(demo_source == DEMO_INPUT_CH2) {
-			if(glp->g_si_config[1].measure_mode == SINGLEINPUT_MEASURE_MODE_VOLTAGE) {
-				value = swapped * cvmt->voltage2[glp->g_si_config[1].range-1].range / cvmt->voltage2[glp->g_si_config[1].range-1].X;
-			} else if(glp->g_si_config[1].measure_mode == SINGLEINPUT_MEASURE_MODE_CURRENT) {
-				value = swapped * cvmt->current[glp->g_si_config[1].range-1].range / cvmt->current[glp->g_si_config[1].range-1].X;
-			}
+			value = swapped * cvmt->voltage2[glp->g_siginput_config[1].range-1].range / cvmt->voltage2[glp->g_siginput_config[1].range-1].X;
 		}
 		break;
 	case DAQ_SOURCE_KIND_Y:
 		if(demo_source == DEMO_INPUT_CH1) {
-			if(glp->g_si_config[0].measure_mode == SINGLEINPUT_MEASURE_MODE_VOLTAGE) {
-				value = swapped * cvmt->voltage1[glp->g_si_config[0].range-1].range / cvmt->voltage1[glp->g_si_config[0].range-1].Y;
-			} else if(glp->g_si_config[0].measure_mode == SINGLEINPUT_MEASURE_MODE_CURRENT) {
-				value = swapped * cvmt->current[glp->g_si_config[0].range-1].range / cvmt->current[glp->g_si_config[0].range-1].Y;
-			}
+			value = swapped * cvmt->voltage1[glp->g_siginput_config[0].range-1].range / cvmt->voltage1[glp->g_siginput_config[0].range-1].Y;
 		}else if(demo_source == DEMO_INPUT_CH2) {
-			if(glp->g_si_config[1].measure_mode == SINGLEINPUT_MEASURE_MODE_VOLTAGE) {
-				value = swapped * cvmt->voltage2[glp->g_si_config[1].range-1].range / cvmt->voltage2[glp->g_si_config[1].range-1].Y;
-			} else if(glp->g_si_config[1].measure_mode == SINGLEINPUT_MEASURE_MODE_CURRENT) {
-				value = swapped * cvmt->current[glp->g_si_config[1].range-1].range / cvmt->current[glp->g_si_config[1].range-1].Y;
-			}
+			value = swapped * cvmt->voltage2[glp->g_siginput_config[1].range-1].range / cvmt->voltage2[glp->g_siginput_config[1].range-1].Y;
 		}
 		break;
 	case DAQ_SOURCE_KIND_R:
 		if(demo_source == DEMO_INPUT_CH1) {
-			if(glp->g_si_config[0].measure_mode == SINGLEINPUT_MEASURE_MODE_VOLTAGE) {
-				value = swapped * cvmt->voltage1[glp->g_si_config[0].range-1].range / cvmt->voltage1[glp->g_si_config[0].range-1].R;
-			} else if(glp->g_si_config[0].measure_mode == SINGLEINPUT_MEASURE_MODE_CURRENT) {
-				value = swapped * cvmt->current[glp->g_si_config[0].range-1].range / cvmt->current[glp->g_si_config[0].range-1].R;
-			}
-			//printf("%" PRId64 " * %.5f / %lld = %.9f\r\n", swapped, cvmt->voltage1[glp->g_l500k_si_config[0].v_range-1].range, cvmt->voltage1[glp->g_l500k_si_config[0].v_range-1].R, value);
+			value = swapped * cvmt->voltage1[glp->g_siginput_config[0].range-1].range / cvmt->voltage1[glp->g_siginput_config[0].range-1].R;
+			P_LOG_DEBUG("%" PRId64 " * %.5f / %lld = %.9f\r\n", swapped, cvmt->voltage1[glp->g_siginput_config[0].range-1].range, cvmt->voltage1[glp->g_siginput_config[0].range-1].R, value);
 		}else if(demo_source == DEMO_INPUT_CH2) {
-			if(glp->g_si_config[1].measure_mode == SINGLEINPUT_MEASURE_MODE_VOLTAGE) {
-				value = swapped * cvmt->voltage2[glp->g_si_config[1].range-1].range / cvmt->voltage2[glp->g_si_config[1].range-1].R;
-			} else if(glp->g_si_config[1].measure_mode == SINGLEINPUT_MEASURE_MODE_CURRENT) {
-				value = swapped * cvmt->current[glp->g_si_config[1].range-1].range / cvmt->current[glp->g_si_config[1].range-1].R;
-			}
+			value = swapped * cvmt->voltage2[glp->g_siginput_config[1].range-1].range / cvmt->voltage2[glp->g_siginput_config[1].range-1].R;
 		}
 		break;
 	case DAQ_SOURCE_KIND_Q:
@@ -413,50 +389,34 @@ static double scope_logic_level(int32_t temp)
 	return temp > 0 ? 1.0 : 0.0;
 }
 
-static double scope_signal_input_to_value(int32_t temp, int channel, gLobalParam *glp, MappingTable *cvmt)
+static double scope_signal_input_to_value(int16_t temp, int channel, gLobalParam *glp, MappingTable *cvmt)
 {
 	double v = 0.0;
-
-	if(channel == 0) {
-		if(glp->g_si_config[0].measure_mode == SINGLEINPUT_MEASURE_MODE_VOLTAGE) {
-			v = temp * cvmt->voltage1[glp->g_si_config[0].range - 1].range / cvmt->voltage1[glp->g_si_config[0].range - 1].R1;
-		} else if(glp->g_si_config[0].measure_mode == SINGLEINPUT_MEASURE_MODE_CURRENT) {
-			v = temp * cvmt->current[glp->g_si_config[0].range - 1].range / cvmt->current[glp->g_si_config[0].range - 1].R1;
-		} else {
-			P_LOG_ERROR("load_double: unknown M005M ch1 measure mode %d", glp->g_si_config[0].measure_mode);
-		}
-
-	} else if(channel == 1) {
-		if(glp->g_si_config[1].measure_mode == SINGLEINPUT_MEASURE_MODE_VOLTAGE) {
-			v = temp * cvmt->voltage1[glp->g_si_config[1].range - 1].range / cvmt->voltage1[glp->g_si_config[1].range - 1].R1;
-		} else if(glp->g_si_config[1].measure_mode == SINGLEINPUT_MEASURE_MODE_CURRENT) {
-			v = temp * cvmt->current[glp->g_si_config[1].range - 1].range / cvmt->current[glp->g_si_config[1].range - 1].R1;
-		} else {
-			P_LOG_ERROR("load_double: unknown M005M ch2 measure mode %d", glp->g_si_config[1].measure_mode);
-		}
-	}
-
+	v = temp * cvmt->voltage1[glp->g_siginput_config[channel].range - 1].range / cvmt->voltage1[glp->g_siginput_config[channel].range - 1].R1;
+	// P_LOG_DEBUG("scope_signal_input_to_value: channel=%d, temp=0x%08x, range=%f, R1=%llu, value=%f\r\n",
+	// 			channel, temp, cvmt->voltage1[glp->g_siginput_config[channel].range - 1].range,
+	// 			cvmt->voltage1[glp->g_siginput_config[channel].range - 1].R1, v);
 	return v;
 }
 
 double load_double(const void *p)
 {
-	int32_t temp;
+	int16_t temp = 0;
 	double v = 0.0;
 	gLobalParam *glp = NULL;
 	MappingTable *cvmt = NULL;
 	get_cv_maptable(&cvmt);
 	get_global_param(&glp);
 
-	memcpy(&temp, p, sizeof(temp)); /* avoid unaligned access */
+	memcpy(&temp, p, sizeof(temp));
+
+	//P_LOG_DEBUG("0x%04x\r\n", (uint16_t)temp);
 
 	switch(glp->g_scope_source) {
 	case SCOPE_SOURCE_SIGNALIN1:
-		v = scope_signal_input_to_value(temp, 0, glp, cvmt);
-		break;
+		v = scope_signal_input_to_value(temp, 0, glp, cvmt); break;
 	case SCOPE_SOURCE_SIGNALIN2:
-		v = scope_signal_input_to_value(temp, 1, glp, cvmt);
-		break;
+		v = scope_signal_input_to_value(temp, 1, glp, cvmt); break;
 	case SCOPE_SOURCE_REFOSC: break;
 	case SCOPE_SOURCE_SINOUT1: break;
 	case SCOPE_SOURCE_SINOUT2: break;
@@ -493,7 +453,6 @@ double mean_double_array(const double *data, int len)
     return sum / (double)len;
 }
 
-
 void trig_source_signal_reset()
 {
 	int source;
@@ -522,25 +481,30 @@ void trig_source_signal_reset()
 
 
 
-/*****************************************************************************
- Function    : demux_one_frame
- Description : Demux DAQ multi-source data. Scope channels do not need source demux because each channel comes from an independent DMA path.
- Inputs      : void *rxbuff
-             int total_bytes
-             int *ch_list
-             int num_channels
-             int ch_type
- Outputs     : none
- Return      : int
- Calls       :
- Called by   :
-
- History     :
-  1.Date     : 2025-08-16
-    Author   : huangwei
-    Changes  : Initial version
-
-*****************************************************************************/
+/*
+ * Scope DMA data format, 2 bytes per sample:
+ *
+ *   Set0:
+ *     CH0: S0 S1 S2 S3
+ *     CH1: S0 S1 S2 S3
+ *     ...
+ *     CHn: S0 S1 S2 S3
+ *
+ *   Set1:
+ *     CH0: S4 S5 S6 S7
+ *     CH1: S4 S5 S6 S7
+ *     ...
+ *
+ *   Matrix: [num_sets][num_channels][4 samples]
+ *
+ *   SCOPE_BYTES_PER_SAMPLE = 2
+ *   SCOPE_BLOCK_BYTES      = 4 * 2 = 8 bytes per channel per set
+ *   set_bytes              = num_channels * SCOPE_BLOCK_BYTES
+ *
+ *   addr(s, ch, b) = base + s * set_bytes + ch * SCOPE_BLOCK_BYTES + b * SCOPE_BYTES_PER_SAMPLE
+ *
+ * DAQ data format is unchanged and still uses the original channel/block layout.
+ */
 int demux_one_frame(void *rxbuff, int total_bytes, int *ch_list, int num_channels, int ch_type)
 {
 	int set_bytes,dst, s;
@@ -583,20 +547,7 @@ int demux_one_frame(void *rxbuff, int total_bytes, int *ch_list, int num_channel
 			average = mean_double_array(daq_buf, dst);
 			data_ch = daq_source_to_data_ch(ch_list[ch]);
 			save_demo_data(pavgdemodata, data_ch, average);
-#if 0
-			// save DMA data to file
-	        FILE *fp = fopen("dma_dump.bin", "wb");
-	        if (!fp) {
-	            perror("Failed to open dump file");
-	        } else {
-	            size_t written = fwrite(daq_buf, 1, total_bytes, fp);
-	            if (written != total_bytes) {
-	                fprintf(stderr, "Warning: wrote %zu of %d bytes\n", written, total_bytes);
-	            }
-	            fclose(fp);
-	            printf("DMA buffer saved to dma_dump.bin (%zu bytes)\n", written);
-	        }
-#endif
+
 			//printhex(daq_buf, total_bytes/num_channels, 24);
 
 			//printf("IN QUENUE CH: %d Size:%d\r\n", ch_list[ch], samples_per_ch * DAQ_BYTES_PER_SAMPLE);
@@ -623,28 +574,12 @@ int demux_one_frame(void *rxbuff, int total_bytes, int *ch_list, int num_channel
 			dst = 0;
 			for (s = 0; s < num_sets; ++s) {
 				const uint8_t *blk = base + s * set_bytes + (size_t)ch * SCOPE_BLOCK_BYTES;
-				// copy the 4 samples for this channel in the group
-				for (int b = 0; b < SAMPLES_PER_BLOCK; ++b) {
-					//scope_buf[dst++] = load_u32(blk + b * SCOPE_BYTES_PER_SAMPLE);
+				// copy the 4 samples for this channel in the group: S1, S0, S3, S2
+				for (int b = 0; b < SAMPLES_PER_BLOCK; b += 2) {
+					scope_buf[dst++] = load_double(blk + (b + 1) * SCOPE_BYTES_PER_SAMPLE);
 					scope_buf[dst++] = load_double(blk + b * SCOPE_BYTES_PER_SAMPLE);
-
 				}
 			}
-#if 0
-			// save DMA data to file
-	        FILE *fp = fopen("dma_dump.bin", "wb");
-	        if (!fp) {
-	            perror("Failed to open dump file");
-	        } else {
-	            size_t written = fwrite(daq_buf, 1, total_bytes, fp);
-	            if (written != total_bytes) {
-	                fprintf(stderr, "Warning: wrote %zu of %d bytes\n", written, total_bytes);
-	            }
-	            fclose(fp);
-	            printf("DMA buffer saved to dma_dump.bin (%zu bytes)\n", written);
-	        }
-#endif
-
 			//save the final average for VISA demod-data query
 			average = mean_double_array(scope_buf, dst);
 
@@ -654,9 +589,7 @@ int demux_one_frame(void *rxbuff, int total_bytes, int *ch_list, int num_channel
 			// SCOPE_BYTES_PER_SAMPLE is the raw PL sample width. scope_buf has been converted to double.
 			{
 				size_t scope_frame_len = samples_per_ch * sizeof(double);
-				bool write_ok = frame_buffer_write(&frb[ch_list[ch]], ch_list[ch], (uint8_t *)scope_buf, scope_frame_len);
-				P_LOG_DEBUG("Scope frame write: ch=%d samples=%d len=%u ok=%d\r\n",
-					ch_list[ch], samples_per_ch, (unsigned int)scope_frame_len, write_ok ? 1 : 0);
+				frame_buffer_write(&frb[ch_list[ch]], ch_list[ch], (uint8_t *)scope_buf, scope_frame_len);
 			}
 		}
 	}
@@ -691,8 +624,10 @@ int demux_frame_part_to_ff(void *rxbuff, int total_bytes, int *ch_list, int num_
 	int samples_per_ch;
 	double average;
 	uint8_t *base = (uint8_t *)rxbuff;
+	gLobalParam *glp = NULL;
 
 	if (num_channels <= 0) return -1;
+	get_global_param(&glp);
 
 	if(ch_type == CH_SCOPE) {
 		set_bytes = (size_t)num_channels * SCOPE_BLOCK_BYTES; 	// bytes per group; each channel has 4 samples
@@ -815,22 +750,7 @@ void read_from_dma_to_ringbuff(uint32_t size, int32_t ch_type)
 			if(rtn !=0 ) {
 				printf("dma read failed\r\n");
 			}
-#if 0
-			// save DMA data to file
-	        FILE *fp = fopen("dma_dump.bin", "wb");
-	        if (!fp) {
-	            perror("Failed to open dump file");
-	        } else {
-	            size_t written = fwrite(daq_buf, 1, total_bytes, fp);
-	            if (written != total_bytes) {
-	                fprintf(stderr, "Warning: wrote %zu of %d bytes\n", written, total_bytes);
-	            }
-	            fclose(fp);
-	            printf("DMA buffer saved to dma_dump.bin (%zu bytes)\n", written);
-	        }
-#endif
 			demux_one_frame(ctx->channel[0].rxbuff, total_bytes, channel_list_l, source_lowcnt, CH_DAQ);
-
 		}
 
 		if(source_highcnt !=0) {
@@ -856,6 +776,8 @@ void read_from_dma_to_ringbuff(uint32_t size, int32_t ch_type)
 
 			channel_list_l[0] = CH_SCOPE_CH1;
 			demux_one_frame(ctx->channel[0].rxbuff, total_bytes, channel_list_l, source_lowcnt, CH_SCOPE);
+
+			//printhex(ctx->channel[0].rxbuff, total_bytes, 64);
 
 		}
 
@@ -1148,14 +1070,16 @@ int read_demo_rdata(DemoDaqData *prdata)
 	uint64_t temp;
 	double   data;
 
-	//这里应该考虑6解调器的读取情况，暂时未考虑，这里上传的结构是按照最大解调器设计的
 	for(i = 0; i < readcnt; i++) {
 		temp_l = reg_read(0x0200 + i*2);//real-time data base addr:0x0200
 		temp_h = reg_read(0x0200 + i*2 + 1);
 
 		temp = ((uint64_t)temp_l << 32) | (temp_h);
-		//P_LOG_DEBUG("temp_h: 0x%08x, temp_l: 0x%08x, temp: 0x%016lx\r\n", temp_h, temp_l, temp);
+
+		P_LOG_DEBUG("temp_h: 0x%08x, temp_l: 0x%08x, temp: 0x%016lx\r\n", temp_h, temp_l, temp);
+
 		data = load_double_swap32(&temp, i);
+
 		save_demo_data(prdata, i, data);
 	}
 	return 0;
@@ -1366,13 +1290,11 @@ static void datatask_prepare_daq_next_frame(int lowsrc_cnt, int highsrc_cnt)
 
 static void datatask_prepare_scope_first_frame(int lowsrc_cnt, int highsrc_cnt, int depth, int pwa_mode)
 {
-	int cache_length = pwa_mode ? 10 : (depth / 2);
-	int write_length = pwa_mode ? (depth - 10) : (depth / 2);
 
 	if(lowsrc_cnt) {
 		datatask_printf("[%d]\r\n", 0);
-		reg_write_by_name("ch1_up_data_cache_length", cache_length);
-		reg_write_by_name("ch1_up_data_write_length", write_length);
+		reg_write_by_name("ch1_up_data_cache_length", depth/2);
+		reg_write_by_name("ch1_up_data_write_length", depth/2);
 		reg_write_by_name("ch1_block_size", depth);
 
 		datatask_printf("[%d]\r\n", 1);
@@ -1388,8 +1310,8 @@ static void datatask_prepare_scope_first_frame(int lowsrc_cnt, int highsrc_cnt, 
 
 	if(highsrc_cnt) {
 		datatask_printf("[%d]\r\n", 0);
-		reg_write_by_name("ch2_up_data_cache_length", cache_length);
-		reg_write_by_name("ch2_up_data_write_length", write_length);
+		reg_write_by_name("ch2_up_data_cache_length", depth/2);
+		reg_write_by_name("ch2_up_data_write_length", depth/2);
 		reg_write_by_name("ch2_block_size", depth);
 
 		datatask_printf("[%d]\r\n", 1);
@@ -1515,7 +1437,7 @@ static int datatask_handle_scope_signal(dma_status_wait_t *wait_ctx)
 	}
 
 	get_param_by_name(PARAM_CURRENT,"trig_smplen", 0, &data);
-	depth = ((data.value.i32 * 4) / 16);
+	depth = ((data.value.i32 * 2) / 16);
 
 	reg_write_by_name("trig_en", 1);
 	datatask_prepare_scope_first_frame(lowsrc_cnt, highsrc_cnt, depth, 0);
@@ -1527,7 +1449,7 @@ static int datatask_handle_scope_signal(dma_status_wait_t *wait_ctx)
 		set_param_by_name(PARAM_CURRENT,"scope_signal", 0, setpv);
 		return 1;
 	}
-	read_from_dma_to_ringbuff((data.value.i32 * 4), CH_SCOPE);
+	read_from_dma_to_ringbuff((data.value.i32 * 2), CH_SCOPE);
 	datatask_clear_capture_paths();
 	set_param_by_name(PARAM_CURRENT,"scope_signal", 0, setpv);
 	return 0;
@@ -1547,7 +1469,7 @@ static int datatask_handle_scope_run(dma_status_wait_t *wait_ctx, int *start_wor
 	}
 
 	get_param_by_name(PARAM_CURRENT,"trig_smplen", 0, &data);
-	depth = ((data.value.i32 * 4) / 16);
+	depth = ((data.value.i32 * 2) / 16);
 
 	if(*start_work_first) {
 		datatask_printf("Scope Running...\r\n");
@@ -1564,7 +1486,7 @@ static int datatask_handle_scope_run(dma_status_wait_t *wait_ctx, int *start_wor
 		datatask_printf("Scope run aborted by host stop\r\n");
 		return 1;
 	}
-	read_from_dma_to_ringbuff((data.value.i32 * 4), CH_SCOPE);
+	read_from_dma_to_ringbuff((data.value.i32 * 2), CH_SCOPE);
 	return 0;
 }
 

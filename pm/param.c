@@ -408,7 +408,17 @@ void init_param()
 void init_default_param()
 {
 	reg_write_by_name("pll_enable", 1);
-    init_awg_ctx();
+    init_awg_ctx();//initial awg default
+
+    //initial ad/da default delay;
+    reg_write_by_name("ltc2000_1_odelay", 2);
+    reg_write_by_name("ltc2000_2_odelay", 2);
+    reg_write_by_name("ad9684_idelay", 100);
+    reg_write_by_name("load_delay", 0);
+    reg_write_by_name("load_delay", 1);
+    reg_write_by_name("load_delay", 0);
+
+    //others
 }
 
 #define MAX_PRESETS 8
@@ -498,7 +508,7 @@ int load_system_config(const char* filename, SystemConfig* configs, int max_coun
 				g_device_model = DEVICE_MODEL_L500K;
 				printf("Device Model: %s\r\n", DEVICE_MODEL_STR_L500K);
 			}else if(strncmp(configs[i].model, DEVICE_MODEL_STR_MFI_LAB, strlen(DEVICE_MODEL_STR_MFI_LAB)) == 0) {
-				g_device_model = DEVICE_MODEL_M005M;
+				g_device_model = DEVICE_MODEL_MFI_LAB;
 				printf("Device Model: %s\r\n", DEVICE_MODEL_STR_MFI_LAB);
 			}else {
 				printf("Unknown Device Model\r\n");
@@ -643,22 +653,6 @@ int load_mapping_table(const char *filepath, MappingTable *table)
         }
     }
 
-    // current
-    cJSON *current = cJSON_GetObjectItem(root, "current");
-    table->current_count = 0;
-    if (cJSON_IsArray(current)) {
-        int n = cJSON_GetArraySize(current);
-        for (int i = 0; i < n && i < MAX_MAP_ITEMS; i++) {
-            cJSON *item = cJSON_GetArrayItem(current, i);
-            table->current[i].range = cJSON_GetObjectItem(item, "range")->valuedouble;
-            table->current[i].X  = strtoull(cJSON_GetObjectItem(item, "X")->valuestring, NULL, 10);
-			table->current[i].Y  = strtoull(cJSON_GetObjectItem(item, "Y")->valuestring, NULL, 10);
-			table->current[i].R  = strtoull(cJSON_GetObjectItem(item, "R")->valuestring, NULL, 10);
-			table->current[i].R1 = strtoull(cJSON_GetObjectItem(item, "R1")->valuestring, NULL, 10);
-            table->current_count++;
-        }
-    }
-
     cJSON_Delete(root);
 
 
@@ -672,12 +666,6 @@ int load_mapping_table(const char *filepath, MappingTable *table)
 		printf("  range=%.3f	X=%llu  Y=%llu	R=%llu	R1=%llu\n",
 			   table->voltage2[i].range, table->voltage2[i].X, table->voltage2[i].Y, table->voltage2[i].R, table->voltage2[i].R1);
 	}
-	printf("Current:\r\n");
-	for (int i = 0; i < table->current_count; ++i) {
-		printf("  range=%.9f	X=%llu  Y=%llu R=%llu	R1=%llu\n",
-			   table->current[i].range, table->current[i].X, table->current[i].Y, table->current[i].R, table->current[i].R1);
-	}
-
 
     return 0;
 }
@@ -687,20 +675,12 @@ int load_mapping_table(const char *filepath, MappingTable *table)
 int init_system_param()
 {
 	int count = load_system_config(SYSTEM_PATH, &configs, MAX_PRESETS);
-	const char *mmap_path = MMAPTABLE_PATH;
+	const char *mmap_path = MMAPTABLE_MFILAB_PATH;
 
     if (count <= 0) {
         printf("Failed to load or empty config\n");
         return -1;
     }
-
-	if ((g_device_model == DEVICE_MODEL_M005M_VV) || (g_device_model == DEVICE_MODEL_M005M_VI)) {
-		mmap_path = MMAPTABLE_VVVI_PATH;
-	} else if (g_device_model == DEVICE_MODEL_M005M) {
-		mmap_path = MMAPTABLE_M005M_PATH;
-	} else if (g_device_model == DEVICE_MODEL_L500K) {
-		mmap_path = MMAPTABLE_L500K_PATH;
-	}
 
 	if (load_mapping_table(mmap_path, &g_cvmap) != 0) {
         printf("open map file failed: %s\r\n", mmap_path);
@@ -807,21 +787,7 @@ void *udp_cmd_thread(void *arg)
     return 0;
 }
 
-/*****************************************************************************
- �� �� ��  : param_thread
- ��������  : ��λ�������������ù������ù���
- �������? : void *arg
- �������? : ��
- �� �� ֵ  : void *
- ���ú���  :
- ��������  :
 
- �޸���ʷ      :
-  1.��    ��   : 2025��11��18��
-    ��    ��   : huangwei
-    �޸�����   : �����ɺ���
-
-*****************************************************************************/
 void *param_thread(void *arg)
 {
 	ParamValue getpv,setpv;
@@ -837,7 +803,6 @@ void *param_thread(void *arg)
 	get_cv_maptable(&pmt);
 
 	while(1) {
-		//[0]����LEVEL<--����Դ<--����Դ��Χ
 		get_param_by_name(PARAM_CURRENT,"trig_source", 0, &getpv);
 		cur_trig_src = getpv.value.i32;
 		get_param_by_name(PARAM_LAST,"trig_source", 0, &getpv);
@@ -856,11 +821,7 @@ void *param_thread(void *arg)
 				last_trig_srcrange = getpv.value.i32;
 				trig_srcref = pmt->voltage2[cur_trig_srcrange].range;
 			}else if(g_device_model == DEVICE_MODEL_M005M_VI) {
-				get_param_by_name(PARAM_CURRENT,"si_curch_range", 0, &getpv);
-				cur_trig_srcrange = getpv.value.i32;
-				get_param_by_name(PARAM_LAST,"si_curch_range", 0, &getpv);
-				last_trig_srcrange = getpv.value.i32;
-				trig_srcref = pmt->current[cur_trig_srcrange].range;
+
 			}
 		}else {
 

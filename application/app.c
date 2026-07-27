@@ -422,21 +422,20 @@ void init()
 	init_adc9684();
 
 	init_dma();
-	start_hislip_service();
 
 	init_fan_speed(2500.0);
-	// init_param();
-	// init_default_param();
+	init_param();
+	init_default_param();
 
-	// pthread_create(&udptid, NULL, tcp_data_server_thread, NULL);
+	pthread_create(&udptid, NULL, tcp_data_server_thread, NULL);
 
 	// pthread_create(&udpcmdid, NULL, udp_cmd_thread, NULL);
 
-	// pthread_create(&bramtid, NULL, data_server_thread, NULL);
+	pthread_create(&bramtid, NULL, data_server_thread, NULL);
 
 	// pthread_create(&extclkid, NULL, clk_thread, NULL);
 
-	// pthread_create(&paramid, NULL, param_thread, NULL);
+	//pthread_create(&paramid, NULL, param_thread, NULL);
 
 	// pthread_create(&scanid, NULL, &scan_thread, NULL);
 

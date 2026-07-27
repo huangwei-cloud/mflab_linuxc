@@ -14,7 +14,8 @@
 #define UP_DATA_CONFIG_BASE     0x1A00
 #define I_CARD_CONFIG_BASE      0x1C00
 #define OSC_CONFIG_BASE         0x2200
-#define AWG_CONFIG_BASE         0x2700
+#define  AWG1_CONFIG_BASE       0x2700
+#define  AWG2_CONFIG_BASE       0x3700
 
 #define REG_CNT_MAX             1000
 
@@ -440,37 +441,35 @@ void init_reg()
     reg_table[i++] = REG(11, range_relays4_en          , I_CARD_CONFIG_BASE + 0x000B, "NULL", "NULL");
 
     /* AWG config */
-    reg_table[i++] = REG(0,  awg1_ch_en                , AWG_CONFIG_BASE + 0x0000, "NULL", "NULL");
-    reg_table[i++] = REG(1,  awg1_play_mode            , AWG_CONFIG_BASE + 0x0001, "NULL", "NULL");
-    reg_table[i++] = REG(2,  awg1_start_read           , AWG_CONFIG_BASE + 0x0002, "NULL", "NULL");
-    reg_table[i++] = REG(3,  awg1_play_en              , AWG_CONFIG_BASE + 0x0003, "NULL", "NULL");
-    reg_table[i++] = REG(4,  awg1_sample_time          , AWG_CONFIG_BASE + 0x0004, "NULL", "NULL");
-    reg_table[i++] = REG(5,  awg1_play_seq_cnt         , AWG_CONFIG_BASE + 0x0005, "NULL", "NULL");
-    reg_table[i++] = REG(6,  awg1_param_addr_en        , AWG_CONFIG_BASE + 0x0006, "NULL", "NULL");
-    reg_table[i++] = REG(7,  awg1_param_addr           , AWG_CONFIG_BASE + 0x0007, "NULL", "NULL");
-    reg_table[i++] = REG(8,  awg1_seq_param_addr_en    , AWG_CONFIG_BASE + 0x0008, "NULL", "NULL");
-    reg_table[i++] = REG(9,  awg1_seq_param_addr       , AWG_CONFIG_BASE + 0x0009, "NULL", "NULL");
-    reg_table[i++] = REG(10, awg1_seq_param            , AWG_CONFIG_BASE + 0x000A, "NULL", "NULL");
-    reg_table[i++] = REG(11, awg1_play_start_addr      , AWG_CONFIG_BASE + 0x000B, "NULL", "NULL");
-    reg_table[i++] = REG(12, awg1_play_length          , AWG_CONFIG_BASE + 0x000C, "NULL", "NULL");
-    reg_table[i++] = REG(13, awg1_play_cnt             , AWG_CONFIG_BASE + 0x000D, "NULL", "NULL");
-    reg_table[i++] = REG(14, awg1_play_waittime        , AWG_CONFIG_BASE + 0x000E, "NULL", "NULL");
-
-    reg_table[i++] = REG(0,  awg2_ch_en                , AWG_CONFIG_BASE + 0x0100, "NULL", "NULL");
-    reg_table[i++] = REG(1,  awg2_play_mode            , AWG_CONFIG_BASE + 0x0101, "NULL", "NULL");
-    reg_table[i++] = REG(2,  awg2_start_read           , AWG_CONFIG_BASE + 0x0102, "NULL", "NULL");
-    reg_table[i++] = REG(3,  awg2_play_en              , AWG_CONFIG_BASE + 0x0103, "NULL", "NULL");
-    reg_table[i++] = REG(4,  awg2_sample_time          , AWG_CONFIG_BASE + 0x0104, "NULL", "NULL");
-    reg_table[i++] = REG(5,  awg2_play_seq_cnt         , AWG_CONFIG_BASE + 0x0105, "NULL", "NULL");
-    reg_table[i++] = REG(6,  awg2_param_addr_en        , AWG_CONFIG_BASE + 0x0106, "NULL", "NULL");
-    reg_table[i++] = REG(7,  awg2_param_addr           , AWG_CONFIG_BASE + 0x0107, "NULL", "NULL");
-    reg_table[i++] = REG(8,  awg2_seq_param_addr_en    , AWG_CONFIG_BASE + 0x0108, "NULL", "NULL");
-    reg_table[i++] = REG(9,  awg2_seq_param_addr       , AWG_CONFIG_BASE + 0x0109, "NULL", "NULL");
-    reg_table[i++] = REG(10, awg2_seq_param            , AWG_CONFIG_BASE + 0x010A, "NULL", "NULL");
-    reg_table[i++] = REG(11, awg2_play_start_addr      , AWG_CONFIG_BASE + 0x010B, "NULL", "NULL");
-    reg_table[i++] = REG(12, awg2_play_length          , AWG_CONFIG_BASE + 0x010C, "NULL", "NULL");
-    reg_table[i++] = REG(13, awg2_play_cnt             , AWG_CONFIG_BASE + 0x010D, "NULL", "NULL");
-    reg_table[i++] = REG(14, awg2_play_waittime        , AWG_CONFIG_BASE + 0x010E, "NULL", "NULL");
+    reg_table[i++] = REG(0,  awg1_addr_en              ,   AWG1_CONFIG_BASE + 0x0000, "NULL",         "NULL");
+	reg_table[i++] = REG(1,  awg1_addr                 ,   AWG1_CONFIG_BASE + 0x0001, "NULL",         "NULL");
+	reg_table[i++] = REG(2,  awg1_play_en              ,   AWG1_CONFIG_BASE + 0x0002, "NULL",         "NULL");
+	reg_table[i++] = REG(3,  awg1_play_mode            ,   AWG1_CONFIG_BASE + 0x0003, "NULL",         "NULL");
+	reg_table[i++] = REG(4,  awg1_play_seq_cnt         ,   AWG1_CONFIG_BASE + 0x0004, "NULL",         "NULL");
+	reg_table[i++] = REG(5,  awg1_play_start_addr      ,   AWG1_CONFIG_BASE + 0x0005, "NULL",         "NULL");
+	reg_table[i++] = REG(6,  awg1_play_length          ,   AWG1_CONFIG_BASE + 0x0006, "NULL",         "NULL");
+	reg_table[i++] = REG(7,  awg1_play_cnt             ,   AWG1_CONFIG_BASE + 0x0007, "NULL",         "NULL");
+	reg_table[i++] = REG(8,  awg1_play_waittime        ,   AWG1_CONFIG_BASE + 0x0008, "NULL",         "NULL");
+	reg_table[i++] = REG(9,  awg1_param_addr_en        ,   AWG1_CONFIG_BASE + 0x0009, "NULL",         "NULL");
+	reg_table[i++] = REG(10, awg1_param_addr           ,   AWG1_CONFIG_BASE + 0x000a, "NULL",         "NULL");
+	reg_table[i++] = REG(11, awg1_seq_param_addr_en    ,   AWG1_CONFIG_BASE + 0x000b, "NULL",         "NULL");
+	reg_table[i++] = REG(12, awg1_seq_param_addr       ,   AWG1_CONFIG_BASE + 0x000c, "NULL",         "NULL");
+	reg_table[i++] = REG(13, awg1_seq_param            ,   AWG1_CONFIG_BASE + 0x000d, "NULL",         "NULL");
+	
+    reg_table[i++] = REG(0,  awg2_addr_en              ,   AWG2_CONFIG_BASE + 0x0000, "NULL",         "NULL");
+	reg_table[i++] = REG(1,  awg2_addr                 ,   AWG2_CONFIG_BASE + 0x0001, "NULL",         "NULL");
+	reg_table[i++] = REG(2,  awg2_play_en              ,   AWG2_CONFIG_BASE + 0x0002, "NULL",         "NULL");
+	reg_table[i++] = REG(3,  awg2_play_mode            ,   AWG2_CONFIG_BASE + 0x0003, "NULL",         "NULL");
+	reg_table[i++] = REG(4,  awg2_play_seq_cnt         ,   AWG2_CONFIG_BASE + 0x0004, "NULL",         "NULL");
+	reg_table[i++] = REG(5,  awg2_play_start_addr      ,   AWG2_CONFIG_BASE + 0x0005, "NULL",         "NULL");
+	reg_table[i++] = REG(6,  awg2_play_length          ,   AWG2_CONFIG_BASE + 0x0006, "NULL",         "NULL");
+	reg_table[i++] = REG(7,  awg2_play_cnt             ,   AWG2_CONFIG_BASE + 0x0007, "NULL",         "NULL");
+	reg_table[i++] = REG(8,  awg2_play_waittime        ,   AWG2_CONFIG_BASE + 0x0008, "NULL",         "NULL");
+	reg_table[i++] = REG(9,  awg2_param_addr_en        ,   AWG2_CONFIG_BASE + 0x0009, "NULL",         "NULL");
+	reg_table[i++] = REG(10, awg2_param_addr           ,   AWG2_CONFIG_BASE + 0x000a, "NULL",         "NULL");
+	reg_table[i++] = REG(11, awg2_seq_param_addr_en    ,   AWG2_CONFIG_BASE + 0x000b, "NULL",         "NULL");
+	reg_table[i++] = REG(12, awg2_seq_param_addr       ,   AWG2_CONFIG_BASE + 0x000c, "NULL",         "NULL");
+	reg_table[i++] = REG(13, awg2_seq_param            ,   AWG2_CONFIG_BASE + 0x000d, "NULL",         "NULL");
 
     reg_table_size = (unsigned int)i;
 }

@@ -81,19 +81,23 @@ static uint32_t trig_source_from_compact_by_model(int32_t param)
 void send_soft_trig()
 {
 	ParamValue getpv;
+    int32_t trig_source;;
 
-	reg_write_by_name("trig_source", soft_trig_source_by_model());
+	reg_write_by_name("trig_source", TS_SOFTWARE);
 	usleep(100);
-
 	reg_write_by_name("soft_trig", 0);
 	usleep(200);
 	reg_write_by_name("soft_trig", 1);
 	usleep(200);
-	//reg_write_by_name("soft_trig", 0);
-	//usleep(100);
+    reg_write_by_name("soft_trig", 0);
 
 	get_param_by_name(PARAM_CURRENT, "trig_source", 0, &getpv);
-	reg_write_by_name("trig_source", trig_source_from_compact_by_model(getpv.value.i32));
+    trig_source = getpv.value.i32 + 1;
+    if(trig_source == TS_SIGNALOUT1_PHASE) {
+        trig_source = TS_TRIGIN1;
+    }
+
+	reg_write_by_name("trig_source", trig_source);
 }
 
 int calc_step(double start, double stop, int points, double *step_out)

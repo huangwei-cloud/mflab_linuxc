@@ -9,12 +9,17 @@ void init_awg_ctx()
 {
 	int i;
 
+	g_awg_ctx.cfg[AWG_CH1].mode = 1;
+	g_awg_ctx.cfg[AWG_CH2].mode = 1;
+
 	for(i = 0; i < AWG_QUEUE_MAX_STEPS; i++) {
 		g_awg_ctx.cfg[AWG_CH1].queue[i].repeat = 1;
 		g_awg_ctx.cfg[AWG_CH1].queue[i].wait_us = 0;
+		g_awg_ctx.cfg[AWG_CH1].queue[i].play_num = i;
 
 		g_awg_ctx.cfg[AWG_CH2].queue[i].repeat = 1;
 		g_awg_ctx.cfg[AWG_CH2].queue[i].wait_us = 0;
+		g_awg_ctx.cfg[AWG_CH2].queue[i].play_num = i;
 	}
 	
 }

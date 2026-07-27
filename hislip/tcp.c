@@ -236,6 +236,7 @@ int tcp_server_start(int port, int n, void (*connection_callback)(int sd, void *
 {
     int server_socket;
     int status;
+    int reuse = 1;
     struct sockaddr_in server_address;
     struct sockaddr_in client_address;
 
@@ -243,6 +244,13 @@ int tcp_server_start(int port, int n, void (*connection_callback)(int sd, void *
     if ((server_socket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
     {
         error_printf("socket() call failed (%s)\n", strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+
+    if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0)
+    {
+        error_printf("setsockopt(SO_REUSEADDR) call failed (%s)\n", strerror(errno));
+        close(server_socket);
         exit(EXIT_FAILURE);
     }
 

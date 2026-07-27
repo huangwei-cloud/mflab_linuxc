@@ -330,11 +330,11 @@ typedef enum _TRIG_SOURCE_MFILAB {
     TS_DEMODULATOR_Y = 4,
     TS_DEMODULATOR_R = 5,
     TS_DEMODULATOR_Q = 6,
-
-    TS_SIGNALOUT1_PHASE = 7,
-    TS_SIGNALOUT2_PHASE = 8,
-    TS_SOFTWARE = 9,
-    TS_TRIGIN1 = 10,
+	TS_DEMODULATOR_FREQ = 7,
+    TS_SIGNALOUT1_PHASE = 8,
+    TS_SIGNALOUT2_PHASE = 9,
+    TS_SOFTWARE = 10,
+    TS_TRIGIN1 = 11,
 }TrigSourceMFILAB;
 
 typedef struct {
@@ -387,4 +387,3 @@ void test_single_ring_buffer();
 
 
 #endif
-

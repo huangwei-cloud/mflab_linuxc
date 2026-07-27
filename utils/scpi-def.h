@@ -37,6 +37,7 @@ extern "C" {
 #include "../clk/regctrl.h"
 #include "../clk/siregctrl.h"
 #include "../clk/l500k_siregctrl.h"
+#include "../siginput/siginputctrl.h"
 #include "../ring/ringbuffer.h"
 #include "../pm/param.h"
 
@@ -104,6 +105,7 @@ typedef struct _GLOBAL_PARAM {
 	SiVolCtrol g_si_vol_ch1_ctrol;
 	SiVolCtrol g_si_vol_ch2_ctrol;
 	SiCurCtrol g_si_cur_ctrol;
+	siginput_config_t g_siginput_config[2];//mflab singleinput config
 	singleinput_config_t g_si_config[2];
 	l500k_singleinput_config_t g_l500k_si_config[2];
 }gLobalParam;
@@ -133,4 +135,3 @@ scpi_result_t SCPI_SystemCommTcpipControlQ(scpi_t * context);
 }
 #endif
 #endif /* __SCPI_DEF_H_ */
-

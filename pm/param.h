@@ -15,6 +15,7 @@
 #define MMAPTABLE_VVVI_PATH "/home/root/app/param/liam005mvvvi/cvmaptable.json"
 #define MMAPTABLE_M005M_PATH "/home/root/app/param/liam005m/cvmaptable.json"
 #define MMAPTABLE_L500K_PATH "/home/root/app/param/lial500k/cvmaptable.json"
+#define MMAPTABLE_MFILAB_PATH "/home/root/app/param/mfilab/cvmaptable.json"
 
 #define DEVICE_MODEL_STR_M005M_VV "LIA-M005M-VV" //ZYNQMPSOC
 #define DEVICE_MODEL_STR_M005M_VI "LIA-M005M-VI" //ZYNQMPSOC
@@ -132,8 +133,6 @@ typedef struct {
     int voltage1_count;
 	MapItem voltage2[MAX_MAP_ITEMS];
     int voltage2_count;
-    MapItem current[MAX_MAP_ITEMS];
-    int current_count;
 } MappingTable;
 
 int get_device_model(void);

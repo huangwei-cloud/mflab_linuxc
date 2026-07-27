@@ -30,15 +30,16 @@ static int hislip_message_sync(int socket, uint32_t message_id, void *buffer, in
     }
 
     response_size = scpi_transport_output_size();
-    if (response_size > 0) {
-        response = (char *)malloc(response_size);
-        if (response == NULL) {
-            return hs_server_send_response(socket, message_id, NULL, 0, timeout);
-        }
-
-        response_len = scpi_transport_read(response, response_size);
+    if (response_size == 0) {
+        return 0;
     }
 
+    response = (char *)malloc(response_size);
+    if (response == NULL) {
+        return hs_server_send_response(socket, message_id, NULL, 0, timeout);
+    }
+
+    response_len = scpi_transport_read(response, response_size);
     ret = hs_server_send_response(socket,
                                   message_id,
                                   response_len > 0 ? response : NULL,
