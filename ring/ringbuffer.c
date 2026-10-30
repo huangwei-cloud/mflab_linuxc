@@ -124,7 +124,7 @@ int frame_filter_accumulate(FrameFilter *ff, int32_t *data, size_t len)
     return 0;
 }
 
-void frame_filter_process(FrameFilter *ff, int last_frame)
+void frame_filter_process(FrameFilter *ff, int last_frame, int channel)
 {
 	int32_t avg;
 
@@ -141,7 +141,7 @@ void frame_filter_process(FrameFilter *ff, int last_frame)
     if (last_frame) {
         for (size_t i = 0; i < ff->received; ++i) {
 			avg = ff->sum_frame[i] / (int64_t)ff->total_frames;
-            ff->filtered_frame[i] = load_double(&avg);
+            ff->filtered_frame[i] = load_double(&avg, channel);
         }
     }
 

@@ -5,7 +5,7 @@
 
 void *data_server_thread(void *arg);
 int read_demo_rdata(DemoDaqData *prdata);
-double load_double(const void *p);
+double load_double(const void *p, int channel);
 
 
 

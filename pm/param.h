@@ -55,6 +55,46 @@ typedef enum _PARAM_FILE{
 	FLASH4,
 }ParamFile;
 
+/* PID input source values match the FPGA register directly. */
+typedef enum {
+	PID_SOURCE_AUXIN1 = 0x00,
+	PID_SOURCE_AUXIN2 = 0x01,
+	PID_SOURCE_AUXIN3 = 0x02,
+	PID_SOURCE_AUXIN4 = 0x03,
+	PID_SOURCE_AUXOUT1 = 0x04,
+	PID_SOURCE_AUXOUT2 = 0x05,
+	PID_SOURCE_AUXOUT3 = 0x06,
+	PID_SOURCE_AUXOUT4 = 0x07,
+	PID_SOURCE_DEMOD1_X = 0x08,
+	PID_SOURCE_DEMOD1_Y = 0x09,
+	PID_SOURCE_DEMOD1_R = 0x0A,
+	PID_SOURCE_DEMOD1_THETA = 0x0B,
+	PID_SOURCE_DEMOD2_X = 0x0C,
+	PID_SOURCE_DEMOD2_Y = 0x0D,
+	PID_SOURCE_DEMOD2_R = 0x0E,
+	PID_SOURCE_DEMOD2_THETA = 0x0F,
+	PID_SOURCE_DEMOD3_X = 0x10,
+	PID_SOURCE_DEMOD3_Y = 0x11,
+	PID_SOURCE_DEMOD3_R = 0x12,
+	PID_SOURCE_DEMOD3_THETA = 0x13,
+	PID_SOURCE_DEMOD4_X = 0x14,
+	PID_SOURCE_DEMOD4_Y = 0x15,
+	PID_SOURCE_DEMOD4_R = 0x16,
+	PID_SOURCE_DEMOD4_THETA = 0x17,
+	PID_SOURCE_DEMOD5_X = 0x18,
+	PID_SOURCE_DEMOD5_Y = 0x19,
+	PID_SOURCE_DEMOD5_R = 0x1A,
+	PID_SOURCE_DEMOD5_THETA = 0x1B,
+	PID_SOURCE_DEMOD6_X = 0x1C,
+	PID_SOURCE_DEMOD6_Y = 0x1D,
+	PID_SOURCE_DEMOD6_R = 0x1E,
+	PID_SOURCE_DEMOD6_THETA = 0x1F,
+	PID_SOURCE_PID_OUT1 = 0x20,
+	PID_SOURCE_PID_OUT2 = 0x21,
+	PID_SOURCE_PID_OUT3 = 0x22,
+	PID_SOURCE_PID_OUT4 = 0x23,
+} PIDSource;
+
 typedef enum {
     PARAM_INT32 = 0,
     PARAM_UINT32,
@@ -149,6 +189,7 @@ void free_param_items(ParamItem* items, int count);
 void print_param_items(const ParamItem* items, int count);
 
 void init_param();
+void reapply_param(void);
 void init_default_param();
 
 int load_system_config(const char* filename, SystemConfig* configs, int max_count);
@@ -157,7 +198,7 @@ int save_system_config(const char* filename, const SystemConfig* configs, int co
 int init_system_param();
 
 void *udp_cmd_thread(void *arg);
-void *param_thread(void *arg);
+void *param_sync_thread(void *arg);
 
 #endif // PM_H
 

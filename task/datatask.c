@@ -2,6 +2,7 @@
 #include <poll.h>
 #include <inttypes.h>
 #include <math.h>
+#include <time.h>
 #include "datatask.h"
 #include "../axigpio/gpio.h"
 #include "../clk/hmc7043.h"
@@ -25,6 +26,7 @@
 #define DMA_PACK_SIZE_SCOPE (16384 * 4)
 #define SCOPE_FRAME_BYTE_MAX (16384 * 4)
 #define DATATASK_DMA_POLL_TIMEOUT_MS 100
+#define SCOPE_AUTO_TIMEOUT_MS 100  /* Wait for a normal frame before forcing a trigger. */
 
 
 #define MIN(a, b) ((a) > (b) ? (b) : (a))
@@ -43,11 +45,6 @@ extern int g_device_model;
 int g_running = 0;
 
 static DataCh daq_source_to_data_ch(int source);
-
-static int datatask_high_dma_channel_index(void)
-{
-	return (g_device_model == DEVICE_MODEL_L500K) ? 0 : 1;
-}
 
 /*****************************************************************************
  Function    : get_channels
@@ -355,7 +352,7 @@ static double load_double_swap32(const void *p, int source)
 	case DAQ_SOURCE_KIND_R:
 		if(demo_source == DEMO_INPUT_CH1) {
 			value = swapped * cvmt->voltage1[glp->g_siginput_config[0].range-1].range / cvmt->voltage1[glp->g_siginput_config[0].range-1].R;
-			P_LOG_DEBUG("%" PRId64 " * %.5f / %lld = %.9f\r\n", swapped, cvmt->voltage1[glp->g_siginput_config[0].range-1].range, cvmt->voltage1[glp->g_siginput_config[0].range-1].R, value);
+			//P_LOG_DEBUG("%" PRId64 " * %.5f / %lld = %.9f\r\n", swapped, cvmt->voltage1[glp->g_siginput_config[0].range-1].range, cvmt->voltage1[glp->g_siginput_config[0].range-1].R, value);
 		}else if(demo_source == DEMO_INPUT_CH2) {
 			value = swapped * cvmt->voltage2[glp->g_siginput_config[1].range-1].range / cvmt->voltage2[glp->g_siginput_config[1].range-1].R;
 		}
@@ -399,41 +396,74 @@ static double scope_signal_input_to_value(int16_t temp, int channel, gLobalParam
 	return v;
 }
 
-double load_double(const void *p)
+double load_double(const void *p, int channel)
 {
 	int16_t temp = 0;
 	double v = 0.0;
+	ScopeDataSource source;
 	gLobalParam *glp = NULL;
 	MappingTable *cvmt = NULL;
 	get_cv_maptable(&cvmt);
 	get_global_param(&glp);
 
+	/* channel is the actual frame ID, not the index of the enabled-channel list. */
+	if(channel == CH_SCOPE_CH1) {
+		source = glp->g_scope_source[0];
+	}else if(channel == CH_SCOPE_CH2) {
+		source = glp->g_scope_source[1];
+	}else {
+		P_LOG_ERROR("load_double: invalid scope channel %d", channel);
+		return 0.0;
+	}
+
 	memcpy(&temp, p, sizeof(temp));
 
 	//P_LOG_DEBUG("0x%04x\r\n", (uint16_t)temp);
 
-	switch(glp->g_scope_source) {
+	switch(source) {
 	case SCOPE_SOURCE_SIGNALIN1:
 		v = scope_signal_input_to_value(temp, 0, glp, cvmt); break;
 	case SCOPE_SOURCE_SIGNALIN2:
 		v = scope_signal_input_to_value(temp, 1, glp, cvmt); break;
-	case SCOPE_SOURCE_REFOSC: break;
-	case SCOPE_SOURCE_SINOUT1: break;
-	case SCOPE_SOURCE_SINOUT2: break;
-	case SCOPE_SOURCE_DEMODX: break;
-	case SCOPE_SOURCE_DEMODY: break;
-	case SCOPE_SOURCE_DEMODR: break;
-	case SCOPE_SOURCE_DEMODQ: break;
-	case SCOPE_SOURCE_PIDUT1: break;
-	case SCOPE_SOURCE_PIDUT2: break;
-	case SCOPE_SOURCE_PIDUT3: break;
-	case SCOPE_SOURCE_PIDUT4: break;
-	case SCOPE_SOURCE_PIDERROR1: break;
-	case SCOPE_SOURCE_PIDERROR2: break;
-	case SCOPE_SOURCE_PIDERROR3: break;
-	case SCOPE_SOURCE_PIDERROR4: break;
+	case SCOPE_SOURCE_REFOSC:
+		v = temp / 32768.0 * 1.0;// need modify
+		//P_LOG_DEBUG("SCOPE_SOURCE_REFOSC: temp=0x%04x, value=%f\r\n", (uint16_t)temp, v);
+		break; 
+	case SCOPE_SOURCE_SINOUT1:
+		v = temp / 32768.0 * 2.0;break; //2VP
+	case SCOPE_SOURCE_SINOUT2:
+		v = temp / 32768.0 * 2.0;break; // ±2 V，4 VPP
+	case SCOPE_SOURCE_DEMODX:
+	case SCOPE_SOURCE_DEMODY: 
+	case SCOPE_SOURCE_DEMODR:
+		/* X/Y/R use the range of DEMOD1's selected input, not the output range. */
+		if(glp->g_demod_param[0].source == DEMO_INPUT_CH1) {
+			v = temp / 32768.0 * cvmt->voltage1[glp->g_siginput_config[0].range - 1].range;
+			//P_LOG_DEBUG("SCOPE_SOURCE_REFOSC: temp=0x%04x, value=%f\r\n", (uint16_t)temp, v);
+		}else if(glp->g_demod_param[0].source == DEMO_INPUT_CH2) {
+			v = temp / 32768.0 * cvmt->voltage2[glp->g_siginput_config[1].range - 1].range;
+		}
+		break;
+	case SCOPE_SOURCE_DEMODQ:
+		v = temp / 32768.0 * 180.0; break; // ±180°
+	case SCOPE_SOURCE_PIDUT1:
+	case SCOPE_SOURCE_PIDUT2:
+	case SCOPE_SOURCE_PIDUT3:
+	case SCOPE_SOURCE_PIDUT4:
+	case SCOPE_SOURCE_PIDERROR1:
+	case SCOPE_SOURCE_PIDERROR2:
+	case SCOPE_SOURCE_PIDERROR3:
+	case SCOPE_SOURCE_PIDERROR4:
+		/* PID outputs use the range of DEMOD1's selected input, not the output range. */
+		if(glp->g_demod_param[0].source == DEMO_INPUT_CH1) {
+			v = temp / 32768.0 * cvmt->voltage1[glp->g_siginput_config[0].range - 1].range;
+			//P_LOG_DEBUG("SCOPE_SOURCE_REFOSC: temp=0x%04x, value=%f\r\n", (uint16_t)temp, v);
+		}else if(glp->g_demod_param[0].source == DEMO_INPUT_CH2) {
+			v = temp / 32768.0 * cvmt->voltage2[glp->g_siginput_config[1].range - 1].range;
+		}
+		break;
 	default:
-		P_LOG_ERROR("load_double: unknown scope source %d", glp->g_scope_source);
+		P_LOG_ERROR("load_double: channel=%d, unknown scope source %d", channel, source);
 		break;
 	}
 
@@ -459,20 +489,7 @@ void trig_source_signal_reset()
 
 	ParamValue getpv;
 	get_param_by_name(PARAM_CURRENT,"trig_source", 0, &getpv);/*read previous trigger source*/
-	source = getpv.value.i32 + 1;
-
-	if(g_device_model == DEVICE_MODEL_L500K) {
-		if(source >= TS_L500K_49_SIGNALOUT1_PHASE
-		   && source <= TS_L500K_52_TRIGIN1) {
-			source += 3;
-		}
-	}else {
-		if(source == TS_M005M_37_SIGNALOUT1_PHASE) {
-			source = TS_M005M_40_TRIGIN1;
-		}else if(source == TS_M005M_38_SIGNALOUT2_PHASE) {
-			source = TS_M005M_41_TRIGIN2;
-		}
-	}
+	source = getpv.value.i32;
 
 	reg_write_by_name("trig_source", source);
 }
@@ -576,8 +593,8 @@ int demux_one_frame(void *rxbuff, int total_bytes, int *ch_list, int num_channel
 				const uint8_t *blk = base + s * set_bytes + (size_t)ch * SCOPE_BLOCK_BYTES;
 				// copy the 4 samples for this channel in the group: S1, S0, S3, S2
 				for (int b = 0; b < SAMPLES_PER_BLOCK; b += 2) {
-					scope_buf[dst++] = load_double(blk + (b + 1) * SCOPE_BYTES_PER_SAMPLE);
-					scope_buf[dst++] = load_double(blk + b * SCOPE_BYTES_PER_SAMPLE);
+					scope_buf[dst++] = load_double(blk + (b + 1) * SCOPE_BYTES_PER_SAMPLE, ch_list[ch]);
+					scope_buf[dst++] = load_double(blk + b * SCOPE_BYTES_PER_SAMPLE, ch_list[ch]);
 				}
 			}
 			//save the final average for VISA demod-data query
@@ -647,7 +664,7 @@ int demux_frame_part_to_ff(void *rxbuff, int total_bytes, int *ch_list, int num_
 				// copy the 4 samples for this channel in the group
 				for (int b = 0; b < SAMPLES_PER_BLOCK; ++b) {
 					//scope_buf[dst++] = load_u32(blk + b * SCOPE_BYTES_PER_SAMPLE);
-					scope_buf[dst++] = load_double(blk + b * SCOPE_BYTES_PER_SAMPLE);
+					scope_buf[dst++] = load_double(blk + b * SCOPE_BYTES_PER_SAMPLE, ch_list[ch]);
 				}
 			}
 
@@ -754,15 +771,14 @@ void read_from_dma_to_ringbuff(uint32_t size, int32_t ch_type)
 		}
 
 		if(source_highcnt !=0) {
-			int high_dma_ch = datatask_high_dma_channel_index();
 			datatask_printf("read high source: %d\r\n", source_highcnt);
 			total_bytes = size*source_highcnt;
-			rtn = axidma_oneway_transfer(ctx->dev, ctx->channel[high_dma_ch].rx_channel, ctx->channel[high_dma_ch].rxbuff, total_bytes, true);
+			rtn = axidma_oneway_transfer(ctx->dev, ctx->channel[1].rx_channel, ctx->channel[1].rxbuff, total_bytes, true);
 			if(rtn !=0 ) {
 				printf("dma read failed\r\n");
 			}
 
-			demux_one_frame(ctx->channel[high_dma_ch].rxbuff, total_bytes, channel_list_h, source_highcnt, CH_DAQ);
+			demux_one_frame(ctx->channel[1].rxbuff, total_bytes, channel_list_h, source_highcnt, CH_DAQ);
 		}
 
 	}else if(ch_type == CH_SCOPE) {
@@ -782,16 +798,15 @@ void read_from_dma_to_ringbuff(uint32_t size, int32_t ch_type)
 		}
 
 		if(source_highcnt != 0) { /*CH2*/
-			int high_dma_ch = datatask_high_dma_channel_index();
 			datatask_printf("read high source: %d\r\n", source_highcnt);
 			total_bytes = size*source_highcnt;
-			rtn = axidma_oneway_transfer(ctx->dev, ctx->channel[high_dma_ch].rx_channel, ctx->channel[high_dma_ch].rxbuff, total_bytes, true);
+			rtn = axidma_oneway_transfer(ctx->dev, ctx->channel[1].rx_channel, ctx->channel[1].rxbuff, total_bytes, true);
 			if(rtn !=0 ) {
 				printf("dma read failed\r\n");
 			}
 
 			channel_list_h[0] = CH_SCOPE_CH2;
-			demux_one_frame(ctx->channel[high_dma_ch].rxbuff, total_bytes, channel_list_h, source_highcnt, CH_SCOPE);
+			demux_one_frame(ctx->channel[1].rxbuff, total_bytes, channel_list_h, source_highcnt, CH_SCOPE);
 
 		}
 	}else {
@@ -892,15 +907,14 @@ void read_bd_from_dma_to_ringbuff(uint32_t size, int32_t ch_type)
 		}
 
 		if(source_highcnt !=0) {
-			int high_dma_ch = datatask_high_dma_channel_index();
 			datatask_printf("read high source: %d\r\n", source_highcnt);
 			total_bytes = size*source_highcnt;
-			rtn = axidma_oneway_transfer(ctx->dev, ctx->channel[high_dma_ch].rx_channel, ctx->channel[high_dma_ch].rxbuff, total_bytes, true);
+			rtn = axidma_oneway_transfer(ctx->dev, ctx->channel[1].rx_channel, ctx->channel[1].rxbuff, total_bytes, true);
 			if(rtn !=0 ) {
 				printf("dma read failed\r\n");
 			}
 
-			demux_one_frame(ctx->channel[high_dma_ch].rxbuff, total_bytes, channel_list_h, source_highcnt, CH_DAQ);
+			demux_one_frame(ctx->channel[1].rxbuff, total_bytes, channel_list_h, source_highcnt, CH_DAQ);
 		}
 
 	}else if(ch_type == CH_SCOPE) {
@@ -918,16 +932,15 @@ void read_bd_from_dma_to_ringbuff(uint32_t size, int32_t ch_type)
 		}
 
 		if(source_highcnt != 0) { /*CH2*/
-			int high_dma_ch = datatask_high_dma_channel_index();
 			datatask_printf("read high source: %d\r\n", source_highcnt);
 			total_bytes = size*source_highcnt;
-			rtn = axidma_oneway_transfer(ctx->dev, ctx->channel[high_dma_ch].rx_channel, ctx->channel[high_dma_ch].rxbuff, total_bytes, true);
+			rtn = axidma_oneway_transfer(ctx->dev, ctx->channel[1].rx_channel, ctx->channel[1].rxbuff, total_bytes, true);
 			if(rtn !=0 ) {
 				printf("dma read failed\r\n");
 			}
 
 			channel_list_h[0] = CH_SCOPE_CH2;
-			demux_one_frame(ctx->channel[high_dma_ch].rxbuff, total_bytes, channel_list_h, source_highcnt, CH_SCOPE);
+			demux_one_frame(ctx->channel[1].rxbuff, total_bytes, channel_list_h, source_highcnt, CH_SCOPE);
 
 		}
 	}else {
@@ -961,7 +974,7 @@ void read_nbd_from_dma_to_ringbuff(uint32_t single_freame_size, int32_t ch_type)
 	int channel_list_l[SOURCE_MAX], channel_list_h[SOURCE_MAX];
 	dma_context_t *ctx = NULL;
 	FrameRingBuffer *frb = NULL;
-	ParamValue pv_trig_times;
+	ParamValue pv_trig_holdoff_count;
 	FrameFilter *pff = NULL;
 	int frame_int,frame_remain,single_freame_spoints;
 
@@ -973,8 +986,8 @@ void read_nbd_from_dma_to_ringbuff(uint32_t single_freame_size, int32_t ch_type)
 	memcpy(channel_list_l, channel_list, sizeof(int) * source_lowcnt);
 	memcpy(channel_list_h, channel_list + source_lowcnt, sizeof(int) * source_highcnt);
 
-	get_param_by_name(PARAM_CURRENT,"trig_times", 0, &pv_trig_times);
-	nbd = pv_trig_times.value.i32;
+	get_param_by_name(PARAM_CURRENT,"trig_holdoff_count", 0, &pv_trig_holdoff_count);
+	nbd = pv_trig_holdoff_count.value.i32;
 
 	//[12] read large data in batches
 	if(ch_type == CH_SCOPE) {
@@ -1027,9 +1040,9 @@ void read_nbd_from_dma_to_ringbuff(uint32_t single_freame_size, int32_t ch_type)
 
 				//[2]one frame received; run accumulation filter
 				if(i == (nbd - 1))
-					frame_filter_process(pff, 1);
+					frame_filter_process(pff, 1, channel_list_l[0]);
 				else
-					frame_filter_process(pff, 0);
+					frame_filter_process(pff, 0, channel_list_l[0]);
 			}
 
 			printf("send data...\r\n");
@@ -1053,11 +1066,10 @@ void read_nbd_from_dma_to_ringbuff(uint32_t single_freame_size, int32_t ch_type)
 		}
 
 		if(source_highcnt != 0) { /*CH2*/
-			int high_dma_ch = datatask_high_dma_channel_index();
 			total_bytes = single_freame_size * source_highcnt;
-			axidma_oneway_transfer(ctx->dev, ctx->channel[high_dma_ch].rx_channel, ctx->channel[high_dma_ch].rxbuff, total_bytes, true);
+			axidma_oneway_transfer(ctx->dev, ctx->channel[1].rx_channel, ctx->channel[1].rxbuff, total_bytes, true);
 			channel_list_h[0] = CH_SCOPE_CH2;
-			demux_one_frame(ctx->channel[high_dma_ch].rxbuff, total_bytes, channel_list_h, source_highcnt, CH_SCOPE);
+			demux_one_frame(ctx->channel[1].rxbuff, total_bytes, channel_list_h, source_highcnt, CH_SCOPE);
 		}
 	}
 }
@@ -1207,6 +1219,53 @@ static int datatask_wait_dma_status(dma_status_wait_t *wait_ctx, int dma_index, 
  */
 static int datatask_wait_selected_dma(dma_status_wait_t *wait_ctx, int lowsrc_cnt, int highsrc_cnt, int mark_running, const char *abort_param_name)
 {
+	ParamValue mode = {0}, source = {0};
+
+	/* AUTO applies only to Scope RUN; single capture and DAQ keep their existing behavior. */
+	if(abort_param_name && strcmp(abort_param_name, "scope_run") == 0) {
+		struct timespec start, now;
+		int pending = (lowsrc_cnt ? 1 : 0) | (highsrc_cnt ? 2 : 0);
+		int forced = 0, completed = 0;
+		int aborted = 0;
+
+		/* A new timer for this armed frame only. The previous frame was already read. */
+		clock_gettime(CLOCK_MONOTONIC, &start);
+		g_running = mark_running;
+		while(pending) {
+			if(!datatask_is_param_enabled(abort_param_name)) {
+				aborted = 1;
+				break;
+			}
+			int poll_ret = poll(wait_ctx->fdset, wait_ctx->nfds, DATATASK_DMA_POLL_TIMEOUT_MS);
+			if(poll_ret < 0) continue;
+			for(int i = 0; i < 2; i++) {
+				if((pending & (1 << i)) && (wait_ctx->fdset[i].revents & POLLPRI)) {
+					int fd = i == 0 ? wait_ctx->fd_ch1_status : wait_ctx->fd_ch2_status;
+					char *buf = i == 0 ? wait_ctx->rxbuff1 : wait_ctx->rxbuff2;
+					int size = i == 0 ? wait_ctx->rxbuff1_size : wait_ctx->rxbuff2_size;
+					lseek(fd, 0, SEEK_SET);
+					read(fd, buf, size);
+					pending &= ~(1 << i);
+					completed = 1;
+				}
+			}
+			if(!pending) break;
+			clock_gettime(CLOCK_MONOTONIC, &now);
+			long long elapsed_ms = (now.tv_sec - start.tv_sec) * 1000LL + (now.tv_nsec - start.tv_nsec) / 1000000;
+			/* Once either DMA finishes, a trigger has occurred: do not force the other path. */
+			if(!forced && !completed &&
+				elapsed_ms >= SCOPE_AUTO_TIMEOUT_MS &&
+				datatask_is_param_enabled(abort_param_name) &&
+				get_param_by_name(PARAM_CURRENT, "trig_mode", 0, &mode) == 0 && mode.value.d == 1 &&
+				get_param_by_name(PARAM_CURRENT, "trig_source", 0, &source) == 0) {
+				send_soft_trig();
+				forced = 1;
+			}
+		}
+		g_running = 0;
+		return aborted;
+	}
+
 	datatask_printf("[%d]\r\n", 6);
 	if(lowsrc_cnt) {
 		if(datatask_wait_dma_status(wait_ctx, 0, mark_running, abort_param_name)) {
@@ -1457,7 +1516,7 @@ static int datatask_handle_scope_signal(dma_status_wait_t *wait_ctx)
 
 static int datatask_handle_scope_run(dma_status_wait_t *wait_ctx, int *start_work_first)
 {
-	ParamValue data;
+	ParamValue data, source;
 	int channel_list[SOURCE_MAX];
 	int chcnt, lowsrc_cnt, highsrc_cnt;
 	int depth;
@@ -1470,6 +1529,11 @@ static int datatask_handle_scope_run(dma_status_wait_t *wait_ctx, int *start_wor
 
 	get_param_by_name(PARAM_CURRENT,"trig_smplen", 0, &data);
 	depth = ((data.value.i32 * 2) / 16);
+
+	/* Every frame starts on the user's source, including the frame after AUTO force. */
+	if(get_param_by_name(PARAM_CURRENT, "trig_source", 0, &source) == 0) {
+		reg_write_by_name("trig_source", (uint32_t)source.value.i32);
+	}
 
 	if(*start_work_first) {
 		datatask_printf("Scope Running...\r\n");
@@ -1484,9 +1548,12 @@ static int datatask_handle_scope_run(dma_status_wait_t *wait_ctx, int *start_wor
 	datatask_pulse_upload_trigger();
 	if(datatask_wait_selected_dma(wait_ctx, lowsrc_cnt, highsrc_cnt, 1, "scope_run")) {
 		datatask_printf("Scope run aborted by host stop\r\n");
+		datatask_clear_capture_paths();
+		*start_work_first = 1;
 		return 1;
 	}
 	read_from_dma_to_ringbuff((data.value.i32 * 2), CH_SCOPE);
+	/* Return only after reading/queuing this frame; the next call starts the next timer. */
 	return 0;
 }
 

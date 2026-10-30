@@ -326,54 +326,51 @@ void *clk_thread(void *arg)
 
 	while(1) {
 
-		reg_read_by_name("pll_freq_l", &freq_l);
-		reg_read_by_name("pll_freq_h", &freq_h);
+		// reg_read_by_name("pll_freq_word_l", &freq_l);
+		// reg_read_by_name("pll_freq_word_h", &freq_h);
 
-		osc_ref_clock_hz = zwdx_oscillator_ref_clock_hz();
-		read_freq_code = ((uint64_t)freq_h << 32) | ((uint64_t)freq_l);
-		current_freq = read_freq_code / pow(2,48) * osc_ref_clock_hz;
+		// read_freq_code = ((uint64_t)freq_h << 32) | ((uint64_t)freq_l);
+		// current_freq = read_freq_code / (double)((1ULL << 48) - 1) * PLL_SAMPLE_RATE;
 
-		for(demod_ch = 0; demod_ch < DEVICE_DEMOD_NUM_L500K; demod_ch++) {
-			if(glp->g_demod_param[demod_ch].osc_source == EXT) {
-				if (current_freq == glp->g_demod_param[demod_ch].osc_freq) {
-					continue;
-				}
-				printf("CH%u->PLL-FREQ: %.8f, LPCALOSC-FREQ: %.8f\r\n",
-					demod_ch + 1, current_freq, glp->g_demod_param[demod_ch].osc_freq);
-				write_freq = current_freq * glp->g_demod_param[demod_ch].osc_harm;
-				glp->g_demod_param[demod_ch].osc_freq = write_freq;
-			} else if(glp->g_demod_param[demod_ch].osc_source == DOUBLE) {
-				write_freq = fabs(current_freq - glp->g_demod_param[demod_ch].osc_freq) * glp->g_demod_param[demod_ch].osc_harm;
-				printf("CH%u->PLL-FREQ: %.8f, LPCALOSC-FREQ: %.8f, DOUBLE-FREQ: %.8f\r\n",
-					demod_ch + 1, current_freq, glp->g_demod_param[demod_ch].osc_freq, write_freq);
-			} else {
-				continue;
-			}
+		// for(demod_ch = 0; demod_ch < 1; demod_ch++) {
+		// 	if(glp->g_demod_param[demod_ch].osc_source == EXTIN1 || glp->g_demod_param[demod_ch].osc_source == EXTIN2) {
+		// 		P_LOG_DEBUG("CH%u->PLL-FREQ: %.8f, LPCALOSC-FREQ: %.8f\r\n",
+		// 			demod_ch + 1, current_freq, glp->g_demod_param[demod_ch].osc_freq);
+		// 		if (current_freq == glp->g_demod_param[demod_ch].osc_freq) {
+		// 			continue;
+		// 		}
+				
+		// 		write_freq = current_freq * glp->g_demod_param[demod_ch].osc_harm;
+		// 		glp->g_demod_param[demod_ch].osc_freq = write_freq;
+		// 	}else {
+		// 		continue;
+		// 	}
 
-			write_freq_code = (uint64_t)(write_freq * pow(2, 48) / osc_ref_clock_hz);
-			snprintf(freq_word_l_name, sizeof(freq_word_l_name),
-				"oscillators%u_freq_word_l", demod_ch + 1);
-			snprintf(freq_word_h_name, sizeof(freq_word_h_name),
-				"oscillators%u_freq_word_h", demod_ch + 1);
+		// 	write_freq_code = (uint64_t)(write_freq * ((1ULL << 48) - 1) / OSC_SAMPLE_RATE);
+		// 	snprintf(freq_word_l_name, sizeof(freq_word_l_name),
+		// 		"oscillators%u_freq_word_l", demod_ch + 1);
+		// 	snprintf(freq_word_h_name, sizeof(freq_word_h_name),
+		// 		"oscillators%u_freq_word_h", demod_ch + 1);
 
-			reg_write_by_name(freq_word_l_name, (uint32_t)(write_freq_code & 0xFFFFFFFF));
-			reg_write_by_name(freq_word_h_name, (uint32_t)((write_freq_code >> 32)& 0xFFFFFFFF));
+		// 	reg_write_by_name(freq_word_l_name, (uint32_t)(write_freq_code & 0xFFFFFFFF));
+		// 	reg_write_by_name(freq_word_h_name, (uint32_t)((write_freq_code >> 32)& 0xFFFFFFFF));
 
-			osc_ext_source_cnt += 1;
-		}
+		// 	osc_ext_source_cnt += 1;
+		// }
 
-		if(osc_ext_source_cnt != 0) {
-			osc_ext_source_cnt = 0;
-			/*start work*/
-			reg_write_by_name("osc_work_all", 0);
-			reg_write_by_name("osc_work_all", 1);
+		// if(osc_ext_source_cnt != 0) {
+		// 	osc_ext_source_cnt = 0;
+		// 	/*start work*/
+		// 	reg_write_by_name("osc_work_all", 0);
+		// 	reg_write_by_name("osc_work_all", 1);
 
-			if(glp->g_dev_trig_source == INT) { 
-				send_soft_trig();
-			}else if(glp->g_dev_trig_source == EXT){
+		// 	if(glp->g_dev_trig_source == INTTRIG) { 
+		// 		send_soft_trig();
+		// 	}else if(glp->g_dev_trig_source == EXTTRIG) {
+		// 		//do nothing
 
-			}
-		}
+		// 	}
+		// }
 
 		if(glp->g_dev_clk_source == INTERNAL_100M) {
 			dev_clk_switch(INTERNAL_100M);
@@ -386,7 +383,7 @@ void *clk_thread(void *arg)
 			glp->g_dev_clk_source = -1;
 		}
 
-		sleep(5);
+		sleep(2);
 	}
 
 }
@@ -403,7 +400,7 @@ void init()
 	pthread_t hisliptid, udptid, bramtid, udpcmdid, extclkid, paramid, scanid;
 	
 	init_system_param();
-	// init_calib_param();
+	init_calib_param();
 
 	plog_init(
         P_LOG_LEVEL_DEBUG |
@@ -429,21 +426,19 @@ void init()
 
 	pthread_create(&udptid, NULL, tcp_data_server_thread, NULL);
 
-	// pthread_create(&udpcmdid, NULL, udp_cmd_thread, NULL);
+	pthread_create(&udpcmdid, NULL, udp_cmd_thread, NULL);
 
 	pthread_create(&bramtid, NULL, data_server_thread, NULL);
 
-	// pthread_create(&extclkid, NULL, clk_thread, NULL);
+	pthread_create(&extclkid, NULL, clk_thread, NULL);
 
-	//pthread_create(&paramid, NULL, param_thread, NULL);
+	pthread_create(&paramid, NULL, param_sync_thread, NULL);
 
 	// pthread_create(&scanid, NULL, &scan_thread, NULL);
 
 	pthread_create(&hisliptid, NULL, hislip_service_thread, NULL);
 
 	// printf("init config finish...\r\n");
-
-
 }
 
 void dev_clk_switch(RefClk rc)
@@ -451,9 +446,9 @@ void dev_clk_switch(RefClk rc)
 	reset_gpio();
 	init_clk(rc);
 	init_adc9684();
-	init_dac3283();
-	init_gpio();
-
+	init_fan_speed(2500.0);
+	reapply_param();
+	init_default_param();
 }
 
 void test_modules()

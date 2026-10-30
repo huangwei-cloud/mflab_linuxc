@@ -1,6 +1,10 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <string.h>
+#include <sys/file.h>
 #include "main.h"
 #include "application/app.h"
 #include "kfifo/kfifo.h"

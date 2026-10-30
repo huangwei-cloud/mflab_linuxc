@@ -8,8 +8,12 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <math.h>
+#include <inttypes.h>
 #include "../ring/ringbuffer.h"
 #include "../awg/awg.h"
+#include "../clk/reg.h"
+#include "../calib/soscalecalib_mfilab.h"
+#include "../log/log.h"
 
 
 
@@ -20,6 +24,7 @@ static MappingTable g_cvmap;
 static ParamItem* g_param_items = NULL;
 static ParamItem* g_last_param_items = NULL;
 static int g_param_count = 0;
+static int g_param_sync_refresh = 0;
 
 static SystemConfig configs;
 
@@ -114,7 +119,8 @@ int set_param_by_name(int objectindex, const char* name, int index, ParamValue n
 
 
             if (old->type != new_value.type){
-				printf("[%s][%d]:Local Param Type Error...\r\n", __FUNCTION__, __LINE__);
+				printf("[%s][%d]:Local Param Type Error: name=%s, index=%d, old_type=%d, new_type=%d\r\n",
+					__FUNCTION__, __LINE__, name, index, (int)old->type, (int)new_value.type);
 				return -3;
 			}
 
@@ -399,14 +405,55 @@ void init_param()
     int count = 0;
     ParamItem* items = load_params_from_json(path, &count);
 
-	//print_param_items(get_param_items(), count);
-	apply_param_items_by_scpi(get_param_items(), count - 12);//最后12个不配置
-
+    reapply_param();
 	printf("load cmd file: %s\r\n", current_path);
+}
+
+void reapply_param(void)
+{
+    /* Reuse the live parameter table; other threads may still be reading it. */
+    if (!get_param_items()) return;
+
+    //init osc continue work
+    reg_write_by_name("oscillators1_en", 1);
+    reg_write_by_name("oscillators2_en", 1);
+    reg_write_by_name("oscillators3_en", 1);
+    reg_write_by_name("oscillators4_en", 1);
+    reg_write_by_name("oscillators5_en", 1);
+    reg_write_by_name("oscillators6_en", 1);
+    reg_write_by_name("oscillators7_en", 1);
+    reg_write_by_name("oscillators8_en", 1);
+
+	apply_param_items_by_scpi(get_param_items(), get_param_count() - 11);
+	/* Replay may leave dependency values unchanged; force their hardware writes once. */
+	__atomic_store_n(&g_param_sync_refresh, 1, __ATOMIC_RELEASE);
 }
 
 void init_default_param()
 {
+    char name[64];
+	int ch;
+
+    // PID固定码值：Upper和Offset为2^63-1，Lower为-2^63，不做物理量换算。
+	for(ch = 1; ch <= 4; ++ch) {
+		sprintf(name, "pid%d_upper_limit_l", ch);
+		reg_write_by_name(name, 0xFFFFFFFFU);
+		sprintf(name, "pid%d_upper_limit_h", ch);
+		reg_write_by_name(name, 0x7FFFFFFFU);
+		sprintf(name, "pid%d_lower_limit_l", ch);
+		reg_write_by_name(name, 0x00000000U);
+		sprintf(name, "pid%d_lower_limit_h", ch);
+		reg_write_by_name(name, 0x80000000U);
+		sprintf(name, "pid%d_output_offset_l", ch);
+		reg_write_by_name(name, 0);
+		sprintf(name, "pid%d_output_offset_h", ch);
+		reg_write_by_name(name, 0);
+		// 64位码值写完后拉高、拉低锁存。
+		sprintf(name, "pid%d_bigwidth_write_en", ch);
+		reg_write_by_name(name, 1);
+		reg_write_by_name(name, 0);
+	}
+
 	reg_write_by_name("pll_enable", 1);
     init_awg_ctx();//initial awg default
 
@@ -418,7 +465,12 @@ void init_default_param()
     reg_write_by_name("load_delay", 1);
     reg_write_by_name("load_delay", 0);
 
+    /* FPGA 识别 osc_work_all 的上升沿，写 0-1-0 产生一次同步脉冲。 */
+	// reg_write_by_name("osc_work_all", 0);
+	// reg_write_by_name("osc_work_all", 1);
+	// reg_write_by_name("osc_work_all", 0);
     //others
+
 }
 
 #define MAX_PRESETS 8
@@ -669,9 +721,6 @@ int load_mapping_table(const char *filepath, MappingTable *table)
 
     return 0;
 }
-
-
-
 int init_system_param()
 {
 	int count = load_system_config(SYSTEM_PATH, &configs, MAX_PRESETS);
@@ -731,7 +780,7 @@ void send_file(int sock, struct sockaddr_in* client_addr, socklen_t addr_len, co
         size_t send_len = sizeof(pkt.file_id) + sizeof(pkt.seq_id) + sizeof(pkt.total) + sizeof(pkt.len) + pkt.len;
 
         sendto(sock, &pkt, send_len, 0, (struct sockaddr*)client_addr, addr_len);
-        usleep(10000); // �򵥽���
+        usleep(10000);
     }
 
     printf("Sent '%s' as %d packets (%ld bytes)\n", filename, total_packets, filesize);
@@ -784,92 +833,453 @@ void *udp_cmd_thread(void *arg)
     }
 
     close(sock);
-    return 0;
+	return 0;
 }
 
+typedef struct {
+	const char *param_name;
+	int index;
+} param_dep_item_t;
 
-void *param_thread(void *arg)
+typedef struct {
+	const char *chain_name;
+	int (*sync_cb)(int channel, int first_run);
+	const param_dep_item_t items[8];
+	int channel;
+} param_dep_chain_t;
+
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
+
+static int param_value_to_int(const ParamValue *pv, int *value)
 {
-	ParamValue getpv,setpv;
-	MappingTable *pmt = NULL;
-	//[0]
-	int cur_trig_src,last_trig_src;
-	int cur_trig_srcrange,last_trig_srcrange;
-	int trig_srcref;
-	uint64_t min_uval, max_uval;
-	int64_t min_val, max_val;
-	double  trig_level, trig_hys;
+	if(pv == NULL || value == NULL) {
+		return -1;
+	}
 
-	get_cv_maptable(&pmt);
+	if(pv->type == PARAM_INT32) {
+		*value = pv->value.i32;
+	} else if(pv->type == PARAM_UINT32) {
+		*value = (int)pv->value.u32;
+	} else if(pv->type == PARAM_DOUBLE) {
+		*value = (int)pv->value.d;
+	} else {
+		return -1;
+	}
 
-	while(1) {
-		get_param_by_name(PARAM_CURRENT,"trig_source", 0, &getpv);
-		cur_trig_src = getpv.value.i32;
-		get_param_by_name(PARAM_LAST,"trig_source", 0, &getpv);
-		last_trig_src = getpv.value.i32;
+	return 0;
+}
 
-		if(cur_trig_src == (TS_M005M_1_VOL - 1)) {
-				get_param_by_name(PARAM_CURRENT,"si_volch1_range", 1, &getpv);
-				cur_trig_srcrange = getpv.value.i32; //index
-				get_param_by_name(PARAM_LAST,"si_volch1_range", 1, &getpv);
-				last_trig_srcrange = getpv.value.i32;
-		}else if(cur_trig_src == (TS_M005M_2_VOLCUR - 1)) {
-			if(g_device_model == DEVICE_MODEL_M005M_VV) {
-				get_param_by_name(PARAM_CURRENT,"si_volch2_range", 1, &getpv);
-				cur_trig_srcrange = getpv.value.i32;
-				get_param_by_name(PARAM_LAST,"si_volch2_range", 1, &getpv);
-				last_trig_srcrange = getpv.value.i32;
-				trig_srcref = pmt->voltage2[cur_trig_srcrange].range;
-			}else if(g_device_model == DEVICE_MODEL_M005M_VI) {
+static int param_value_to_double(const ParamValue *pv, double *value)
+{
+	if(pv == NULL || value == NULL) {
+		return -1;
+	}
 
-			}
-		}else {
+	if(pv->type == PARAM_DOUBLE) {
+		*value = pv->value.d;
+	} else if(pv->type == PARAM_INT32) {
+		*value = (double)pv->value.i32;
+	} else if(pv->type == PARAM_UINT32) {
+		*value = (double)pv->value.u32;
+	} else {
+		return -1;
+	}
 
+	return 0;
+}
+
+static int param_value_equal(const ParamValue *a, const ParamValue *b)
+{
+	if(a == NULL || b == NULL || a->type != b->type) {
+		return 0;
+	}
+
+	switch(a->type) {
+	case PARAM_INT32:
+		return a->value.i32 == b->value.i32;
+	case PARAM_UINT32:
+		return a->value.u32 == b->value.u32;
+	case PARAM_INT64:
+		return a->value.i64 == b->value.i64;
+	case PARAM_UINT64:
+		return a->value.u64 == b->value.u64;
+	case PARAM_DOUBLE:
+		return a->value.d == b->value.d;
+	case PARAM_STRING:
+		return strcmp(a->value.str, b->value.str) == 0;
+	default:
+		return 0;
+	}
+}
+
+static int param_dep_chain_changed(const param_dep_chain_t *chain)
+{
+	int i;
+	ParamValue current;
+	ParamValue last;
+
+	for(i = 0; chain->items[i].param_name != NULL; i++) {
+		if(get_param_by_name(PARAM_CURRENT, chain->items[i].param_name, chain->items[i].index, &current) != 0) {
+			continue;
+		}
+		if(get_param_by_name(PARAM_LAST, chain->items[i].param_name, chain->items[i].index, &last) != 0) {
+			return 1;
+		}
+		if(!param_value_equal(&current, &last)) {
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+static void param_dep_chain_update_last(const param_dep_chain_t *chain)
+{
+	int i;
+	ParamValue current;
+
+	for(i = 0; chain->items[i].param_name != NULL; i++) {
+		if(get_param_by_name(PARAM_CURRENT, chain->items[i].param_name, chain->items[i].index, &current) == 0) {
+			set_param_by_name(PARAM_LAST, chain->items[i].param_name, chain->items[i].index, current);
+		}
+	}
+}
+
+static int sync_signalout_xyr_scale(int channel, int first_run)
+{
+	(void)channel;
+	(void)first_run;
+	ParamValue pv;
+	int ch;
+	int source;
+	int demo_source;
+	int input_range;
+	double user_scale;
+	double output_scale;
+	uint64_t scale_code;
+	const char *source_param_name;
+	const char *scale_param_name;
+	const char *scale_reg_l_name;
+	const char *scale_reg_h_name;
+	const char *scale_reg_en_name;
+	const char *input_range_param_name;
+
+	if(get_param_by_name(PARAM_CURRENT, "demo_source_ch1", 1, &pv) != 0 ||
+	   param_value_to_int(&pv, &demo_source) != 0) {
+		return -1;
+	}
+
+	for(ch = 0; ch < 2; ch++) {
+		if(ch == 0) {
+			source_param_name = "so_source1_ch1";
+			scale_param_name = "so_scaling1_ch1";
+			scale_reg_l_name = "signalout1_scaling1_l";
+			scale_reg_h_name = "signalout1_scaling1_h";
+			scale_reg_en_name = "signalout1_bigwidth_write_en";
+		} else {
+			source_param_name = "so_source1_ch2";
+			scale_param_name = "so_scaling1_ch2";
+			scale_reg_l_name = "signalout2_scaling1_l";
+			scale_reg_h_name = "signalout2_scaling1_h";
+			scale_reg_en_name = "signalout2_bigwidth_write_en";
+		}
+
+		if(get_param_by_name(PARAM_CURRENT, source_param_name, 1, &pv) != 0 ||
+		   param_value_to_int(&pv, &source) != 0) {
 			continue;
 		}
 
-
-		if((cur_trig_src != last_trig_src) || (cur_trig_srcrange != last_trig_srcrange)) {
-			get_param_by_name(PARAM_CURRENT,"trig_level", 0, &getpv);
-			trig_level = getpv.value.d;
-			get_param_by_name(PARAM_CURRENT,"trig_hysteresis", 0, &getpv);
-			trig_hys = getpv.value.d;
-
-			max_val = trig_level + trig_hys;
-			min_val = trig_level - trig_hys;
-			max_uval = (uint64_t)((pow(2,19) - 1) * max_val / trig_srcref); //LEVEL����
-			min_uval = (uint64_t)((pow(2,19) - 1) * min_val / trig_srcref); //LEVEL����
-
-			reg_write_by_name("hysteresis_range_high_l", max_uval & 0xFFFFFFFF);
-			reg_write_by_name("hysteresis_range_high_h", (max_uval >> 32) & 0xFFFFFFFF);
-			reg_write_by_name("hysteresis_range_low_l", max_uval & 0xFFFFFFFF);
-			reg_write_by_name("hysteresis_range_low_h", (max_uval >> 32) & 0xFFFFFFFF);
-
-			if(cur_trig_src == (TS_M005M_1_VOL - 1)) {
-				get_param_by_name(PARAM_CURRENT,"si_volch1_range", 1, &getpv);
-				set_param_by_name(PARAM_LAST,"si_volch1_range", 1, getpv);
-			}else if(cur_trig_src == (TS_M005M_2_VOLCUR - 1)) {
-				if(g_device_model == DEVICE_MODEL_M005M_VV) {
-					get_param_by_name(PARAM_CURRENT,"si_volch2_range", 1, &getpv);
-					set_param_by_name(PARAM_LAST,"si_volch2_range", 1, getpv);
-				}else if(g_device_model == DEVICE_MODEL_M005M_VI) {
-					get_param_by_name(PARAM_CURRENT,"si_curch_range", 0, &getpv);
-					set_param_by_name(PARAM_LAST,"si_curch_range", 0, getpv);
-				}
-			}else {
-
-			}
-			get_param_by_name(PARAM_CURRENT,"trig_source", 0, &getpv);
-			set_param_by_name(PARAM_LAST,"trig_source", 0, getpv);
-
-			printf("trig src or src range is change\r\n");
+		if(get_param_by_name(PARAM_CURRENT, scale_param_name, 1, &pv) != 0 ||
+		   param_value_to_double(&pv, &user_scale) != 0) {
+			continue;
 		}
 
+		input_range_param_name = (demo_source == 0) ? "si_vol_range_ch1" : "si_vol_range_ch2";
+		if(get_param_by_name(PARAM_CURRENT, input_range_param_name, 1, &pv) != 0 ||
+		   param_value_to_int(&pv, &input_range) != 0) {
+			continue;
+		}
 
-		usleep(100);
+		if(source == 0 || source == 1 || source == 2) {
+			/* SignalOut source:
+			 *   0:X, 1:Y, 2:R
+			 *
+			 * For X/Y/R only:
+			 *   +/-0.5 V input range: make it 1:1 at +/-2 V output, so scale = user_scale * 0.5 / 2.
+			 *   +/-5 V input range: do not compensate; keep the original 5:2 output ratio.
+			 */
+			output_scale = (input_range == 0) ? (user_scale * 0.25) : user_scale;
+		} else {
+			output_scale = user_scale;
+		}
+
+		/* Start from the saved raw Scale each time; apply channel calibration once. */
+		output_scale = soscale_mfilab_calibrate_value(ch + 1, output_scale);
+		scale_code = (uint64_t)(output_scale * (double)((1ULL << 32) - 1));
+		reg_write_by_name(scale_reg_l_name, (uint32_t)(scale_code & 0xFFFFFFFF));
+		reg_write_by_name(scale_reg_h_name, (uint32_t)((scale_code >> 32) & 0xFFFFFFFF));
+		reg_write_by_name(scale_reg_en_name, 1);
+		reg_write_by_name(scale_reg_en_name, 0);
+
+		P_LOG_DEBUG("param sync: so_ch%d source=%d demo_source=%d input_range=%d user_scale=%.9f output_scale=%.9f\r\n",
+			ch + 1, source, demo_source, input_range, user_scale, output_scale);
 	}
 
+	return 0;
 }
 
+static int sync_pll_ref_hysteresis(int channel, int first_run)
+{
+	(void)channel;
+	(void)first_run;
+	ParamValue pv;
+	int ref_source;
+	int input_range;
+	double range;
+	double hys_high;
+	double hys_low;
+	int32_t high_code;
+	int32_t low_code;
+	const char *input_range_param_name;
+
+	if(get_param_by_name(PARAM_CURRENT, "ref_source", 0, &pv) != 0 ||
+	   param_value_to_int(&pv, &ref_source) != 0) {
+		return -1;
+	}
+
+	/* PLL reference source:
+	 *   ref_source 0:IN1, 1:IN2
+	 *   si_vol_range 0:+/-0.5 V, 1:+/-5 V
+	 */
+	input_range_param_name = (ref_source == 0) ? "si_vol_range_ch1" : "si_vol_range_ch2";
+	if(get_param_by_name(PARAM_CURRENT, input_range_param_name, 1, &pv) != 0 ||
+	   param_value_to_int(&pv, &input_range) != 0) {
+		return -1;
+	}
+
+	if(get_param_by_name(PARAM_CURRENT, "ref_hys_high", 0, &pv) != 0 ||
+	   param_value_to_double(&pv, &hys_high) != 0) {
+		return -1;
+	}
+
+	if(get_param_by_name(PARAM_CURRENT, "ref_hys_low", 0, &pv) != 0 ||
+	   param_value_to_double(&pv, &hys_low) != 0) {
+		return -1;
+	}
+
+	range = (input_range == 0) ? 0.5 : 5.0;
+	high_code = (int32_t)(hys_high * (pow(2, 19) - 1) / range);
+	low_code = (int32_t)(hys_low * (pow(2, 19) - 1) / range);
+
+	reg_write_by_name("pll_ref_hysteresis_high", high_code);
+	reg_write_by_name("pll_ref_hysteresis_low", low_code);
+
+	P_LOG_DEBUG("param sync: pll_ref source=%d input_range=%d range=%.3f high=%.9f low=%.9f high_code=%d low_code=%d\r\n",
+		ref_source, input_range, range, hys_high, hys_low, high_code, low_code);
+
+	return 0;
+}
+
+static int sync_pid_r_setpoint(int ch, int first_run)
+{
+	ParamValue pv, last_value, last_source, last_demo, last_range;
+	MappingTable *cvmt = NULL;
+	PIDSource source;
+	int demo_source, input_range;
+	double range, value;
+	int64_t setpoint;
+	int ret_l, ret_h, ret_on, ret_off;
+	char reg_name[64], param_name[64];
+
+	get_cv_maptable(&cvmt);
+	sprintf(param_name, "pid_source_ch%d", ch);
+	get_param_by_name(PARAM_CURRENT, param_name, 1, &pv);
+	source = (PIDSource)pv.value.d;
+	sprintf(param_name, "pid_setpoint_ch%d", ch);
+	get_param_by_name(PARAM_CURRENT, param_name, 1, &pv);
+	value = pv.value.d;
+	P_LOG_DEBUG("[PID_SETPOINT] enter: ch=%d, first_run=%d, source=0x%02x, target=%.12g, target_type=%d",
+		ch, first_run, (unsigned)source, value, (int)pv.type);
+
+	if(source == PID_SOURCE_DEMOD1_R) {
+		/* Target (V) -> DEMOD1 input -> input range; reverse the Scope R formula. */
+		get_param_by_name(PARAM_CURRENT, "demo_source_ch1", 1, &pv);
+		demo_source = (int)pv.value.d; /* 0=IN1, 1=IN2. */
+		if(demo_source == 0) {
+			get_param_by_name(PARAM_CURRENT, "si_vol_range_ch1", 1, &pv);
+			input_range = pv.value.i32;
+			range = cvmt->voltage1[input_range].range;
+		}else if(demo_source == 1) {
+			get_param_by_name(PARAM_CURRENT, "si_vol_range_ch2", 1, &pv);
+			input_range = pv.value.i32;
+			range = cvmt->voltage2[input_range].range;
+		}else {
+			P_LOG_DEBUG("[PID_SETPOINT] skip ch%d: DEMOD1 input source=%d is reserved", ch, demo_source);
+			return 0; /* Constant input conversion is reserved. */
+		}
+		setpoint = (int64_t)(value / range * ((1ULL << 63) - 1));
+	}else if(source >= PID_SOURCE_AUXIN1 && source <= PID_SOURCE_AUXIN4) {
+		P_LOG_DEBUG("[PID_SETPOINT] skip ch%d: AUXIN source=0x%02x conversion is reserved", ch, (unsigned)source);
+		return 0; /* TODO: AUXIN1..4 conversion. */
+	}else if(source >= PID_SOURCE_AUXOUT1 && source <= PID_SOURCE_AUXOUT4) {
+		P_LOG_DEBUG("[PID_SETPOINT] skip ch%d: AUXOUT source=0x%02x conversion is reserved", ch, (unsigned)source);
+		return 0; /* TODO: AUXOUT1..4 conversion. */
+	}else if(source >= PID_SOURCE_DEMOD1_X && source <= PID_SOURCE_DEMOD6_THETA) {
+		P_LOG_DEBUG("[PID_SETPOINT] skip ch%d: DEMOD source=0x%02x conversion is reserved", ch, (unsigned)source);
+		return 0; /* TODO: remaining DEMOD1..6 X/Y/R/theta conversions. */
+	}else if(source >= PID_SOURCE_PID_OUT1 && source <= PID_SOURCE_PID_OUT4) {
+		P_LOG_DEBUG("[PID_SETPOINT] skip ch%d: PID output source=0x%02x conversion is reserved", ch, (unsigned)source);
+		return 0; /* TODO: PID output conversion. */
+	}else {
+		P_LOG_DEBUG("[PID_SETPOINT] skip ch%d: unknown source=0x%02x", ch, (unsigned)source);
+		return 0;
+	}
+
+	/* A change on the unused input range must not rewrite this PID. */
+	if(!first_run) {
+		sprintf(param_name, "pid_setpoint_ch%d", ch);
+		get_param_by_name(PARAM_LAST, param_name, 1, &last_value);
+		sprintf(param_name, "pid_source_ch%d", ch);
+		get_param_by_name(PARAM_LAST, param_name, 1, &last_source);
+		get_param_by_name(PARAM_LAST, "demo_source_ch1", 1, &last_demo);
+		sprintf(param_name, "si_vol_range_ch%d", demo_source + 1);
+		get_param_by_name(PARAM_LAST, param_name, 1, &last_range);
+		if(value == last_value.value.d && source == (PIDSource)last_source.value.d &&
+			demo_source == (int)last_demo.value.d && input_range == last_range.value.i32) {
+			P_LOG_DEBUG("[PID_SETPOINT] skip ch%d: target and active dependencies unchanged", ch);
+			return 0;
+		}
+	}
+
+	P_LOG_DEBUG("[PID_SETPOINT] convert: ch=%d, input=IN%d, range_index=%d, range=%.12g V, target=%.12g V, code=%" PRId64 " (0x%016" PRIx64 ")",
+		ch, demo_source + 1, input_range, range, value, setpoint, (uint64_t)setpoint);
+	sprintf(reg_name, "pid%d_set_point_l", ch);
+	ret_l = reg_write_by_name(reg_name, (uint32_t)setpoint);
+	sprintf(reg_name, "pid%d_set_point_h", ch);
+	ret_h = reg_write_by_name(reg_name, (uint32_t)((uint64_t)setpoint >> 32));
+	sprintf(reg_name, "pid%d_bigwidth_write_en", ch);
+	ret_on = reg_write_by_name(reg_name, 1);
+	ret_off = reg_write_by_name(reg_name, 0);
+	P_LOG_DEBUG("[PID_SETPOINT] write ch%d: low=0x%08x (ret=%d), high=0x%08x (ret=%d), commit=1->0 (ret=%d/%d)",
+		ch, (unsigned)(uint32_t)setpoint, ret_l, (unsigned)(uint32_t)((uint64_t)setpoint >> 32), ret_h, ret_on, ret_off);
+	return 0;
+}
+
+static const param_dep_chain_t g_param_dep_chains[] = {
+	{
+		"signalout_xyr_scale",
+		sync_signalout_xyr_scale,
+		{
+			{ "si_vol_range_ch1", 1 },
+			{ "si_vol_range_ch2", 1 },
+			{ "demo_source_ch1",  1 },
+			{ "so_source1_ch1",   1 },
+			{ "so_source1_ch2",   1 },
+			{ "so_scaling1_ch1",  1 },
+			{ "so_scaling1_ch2",  1 },
+			{ NULL, 0 },
+		},
+		0,
+	},
+	{
+		"pll_ref_hysteresis",
+		sync_pll_ref_hysteresis,
+		{
+			{ "ref_source",       0 },
+			{ "si_vol_range_ch1", 1 },
+			{ "si_vol_range_ch2", 1 },
+			{ "ref_hys_high",     0 },
+			{ "ref_hys_low",      0 },
+			{ NULL, 0 },
+		},
+		0,
+	},
+	{
+		"pid1_r_setpoint",
+		sync_pid_r_setpoint,
+		{
+			{ "pid_setpoint_ch1", 1 },
+			{ "pid_source_ch1",   1 },
+			{ "demo_source_ch1",  1 },
+			{ "si_vol_range_ch1", 1 },
+			{ "si_vol_range_ch2", 1 },
+			{ NULL, 0 },
+		},
+		1,
+	},
+	{
+		"pid2_r_setpoint",
+		sync_pid_r_setpoint,
+		{
+			{ "pid_setpoint_ch2", 1 },
+			{ "pid_source_ch2",   1 },
+			{ "demo_source_ch1",  1 },
+			{ "si_vol_range_ch1", 1 },
+			{ "si_vol_range_ch2", 1 },
+			{ NULL, 0 },
+		},
+		2,
+	},
+	{
+		"pid3_r_setpoint",
+		sync_pid_r_setpoint,
+		{
+			{ "pid_setpoint_ch3", 1 },
+			{ "pid_source_ch3",   1 },
+			{ "demo_source_ch1",  1 },
+			{ "si_vol_range_ch1", 1 },
+			{ "si_vol_range_ch2", 1 },
+			{ NULL, 0 },
+		},
+		3,
+	},
+	{
+		"pid4_r_setpoint",
+		sync_pid_r_setpoint,
+		{
+			{ "pid_setpoint_ch4", 1 },
+			{ "pid_source_ch4",   1 },
+			{ "demo_source_ch1",  1 },
+			{ "si_vol_range_ch1", 1 },
+			{ "si_vol_range_ch2", 1 },
+			{ NULL, 0 },
+		},
+		4,
+	},
+};
+
+void *param_sync_thread(void *arg)
+{
+	size_t i;
+	int first_run = 1;
+	int chain_need_sync[ARRAY_SIZE(g_param_dep_chains)] = {0};
+
+	(void)arg;
+
+	while(1) {
+		if(__atomic_exchange_n(&g_param_sync_refresh, 0, __ATOMIC_ACQ_REL)) {
+			first_run = 1;
+		}
+		for(i = 0; i < ARRAY_SIZE(g_param_dep_chains); i++) {
+			chain_need_sync[i] = first_run || param_dep_chain_changed(&g_param_dep_chains[i]);
+		}
+
+		for(i = 0; i < ARRAY_SIZE(g_param_dep_chains); i++) {
+			if(chain_need_sync[i] && g_param_dep_chains[i].sync_cb != NULL) {
+				g_param_dep_chains[i].sync_cb(g_param_dep_chains[i].channel, first_run);
+			}
+		}
+
+		for(i = 0; i < ARRAY_SIZE(g_param_dep_chains); i++) {
+			if(chain_need_sync[i]) {
+				param_dep_chain_update_last(&g_param_dep_chains[i]);
+			}
+		}
+
+		first_run = 0;
+
+		usleep(100000);
+	}
+}
 
 

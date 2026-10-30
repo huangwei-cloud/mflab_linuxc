@@ -1,2602 +1,356 @@
-﻿[
-    {
-        "name":  "active_present",
-        "scpiCmd":  ":SYStem:ACTIVEPRE",
-        "type":  [
-                     0
-                 ],
-        "params":  [
-                       0
-                   ]
-    },
-    {
-        "name":  "default_present",
-        "scpiCmd":  ":SYStem:DEFAULTPRE",
-        "type":  [
-                     0
-                 ],
-        "params":  [
-                       0
-                   ]
-    },
-    {
-        "name":  "debug_read_plreg",
-        "scpiCmd":  ":DEVice:PL:REG?",
-        "type":  [
-                     0
-                 ],
-        "params":  [
-                       0
-                   ]
-    },
-    {
-        "name":  "debug_write_plreg",
-        "scpiCmd":  ":DEVice:PL:REG",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       0,
-                       0
-                   ]
-    },
-    {
-        "name":  "ref_get_freq",
-        "scpiCmd":  ":ZWLia:REF:FREQuency?",
-        "type":  [
-                     0
-                 ],
-        "params":  [
-                       0
-                   ]
-    },
-    {
-        "name":  "dev_clk_lock",
-        "scpiCmd":  ":DEVice:CLK:LOCK?",
-        "type":  [
-                     0
-                 ],
-        "params":  [
-                       0
-                   ]
-    },
-    {
-        "name":  "trig_force",
-        "scpiCmd":  ":ZWLia:TRIG:FORCE",
-        "type":  [
-                     0
-                 ],
-        "params":  [
-                       0
-                   ]
-    },
-    {
-        "name":  "sys_static_ip",
-        "scpiCmd":  ":SYStem:NETWORK:STATIC:IP",
-        "type":  [
-                     5,
-                     5,
-                     5
-                 ],
-        "params":  [
-                       "\"192.168.1.10\"",
-                       "\"255.255.255.0\"",
-                       "\"192.168.1.1\""
-                   ]
-    },
-    {
-        "name":  "query_demo_adata",
-        "scpiCmd":  ":ZWLia:DAQ:ADATA:QUERY?",
-        "type":  [
-                     0
-                 ],
-        "params":  [
-                       0
-                   ]
-    },
-    {
-        "name":  "query_demo_rdata",
-        "scpiCmd":  ":ZWLia:DAQ:RDATA:QUERY?",
-        "type":  [
-
-                 ],
-        "params":  [
-
-                   ]
-    },
-    {
-        "name":  "demo_state_ch1",
-        "scpiCmd":  ":ZWLia:DEMO:ENABLE",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "sys_dhcp_en",
-        "scpiCmd":  ":SYStem:NETWORK:DHCP:ENABLE",
-        "type":  [
-                     0
-                 ],
-        "params":  [
-                       0
-                   ]
-    },
-    {
-        "name":  "dev_clk_source",
-        "scpiCmd":  ":DEVice:CLK:SOURCE",
-        "type":  [
-                     0
-                 ],
-        "params":  [
-                       0
-                   ]
-    },
-    {
-        "name":  "dev_trig_source",
-        "scpiCmd":  ":DEVice:TRIG:SOURCE",
-        "type":  [
-                     0
-                 ],
-        "params":  [
-                       0
-                   ]
-    },
-    {
-        "name":  "ref_source",
-        "scpiCmd":  ":ZWLia:REF:SOURce",
-        "type":  [
-                     5
-                 ],
-        "params":  [
-                       "AUXIN1"
-                   ]
-    },
-    {
-        "name":  "ref_hys_high",
-        "scpiCmd":  ":ZWLia:REF:HYS:HIGH",
-        "type":  [
-                     4
-                 ],
-        "params":  [
-                       0
-                   ]
-    },
-    {
-        "name":  "ref_hys_low",
-        "scpiCmd":  ":ZWLia:REF:HYS:LOW",
-        "type":  [
-                     4
-                 ],
-        "params":  [
-                       0
-                   ]
-    },
-    {
-        "name":  "ref_filter_win",
-        "scpiCmd":  ":ZWLia:REF:FILTER:WINDOWS",
-        "type":  [
-                     0
-                 ],
-        "params":  [
-                       0
-                   ]
-    },
-    {
-        "name":  "ref_calc_time",
-        "scpiCmd":  ":ZWLia:REF:CALC:TIME",
-        "type":  [
-                     4
-                 ],
-        "params":  [
-                       0
-                   ]
-    },
-    {
-        "name":  "ref_intfilter_win",
-        "scpiCmd":  ":ZWLia:REF:INTFILTER:WINDOWS",
-        "type":  [
-                     0
-                 ],
-        "params":  [
-                       0
-                   ]
-    },
-    {
-        "name":  "si_vol_couping_ch1",
-        "scpiCmd":  ":ZWLia:SIGNALin:VOL:COUPING",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "si_vol_impedance_ch1",
-        "scpiCmd":  ":ZWLia:SIGNALin:VOL:IMPEDANCE",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "si_vol_range_ch1",
-        "scpiCmd":  ":ZWLia:SIGNALin:VOL:RANGE",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       1,
-                       1
-                   ]
-    },
-    {
-        "name":  "si_vol_couping_ch2",
-        "scpiCmd":  ":ZWLia:SIGNALin:VOL:COUPING",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "si_vol_impedance_ch2",
-        "scpiCmd":  ":ZWLia:SIGNALin:VOL:IMPEDANCE",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "si_vol_range_ch2",
-        "scpiCmd":  ":ZWLia:SIGNALin:VOL:RANGE",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       2,
-                       1
-                   ]
-    },
-    {
-        "name":  "refinput_wave_mode_ch1",
-        "scpiCmd":  ":ZWLia:REFin:WAVEMODE",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "refinput_wave_mode_ch2",
-        "scpiCmd":  ":ZWLia:REFin:WAVEMODE",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "so_osc_enable_ch1",
-        "scpiCmd":  ":ZWLia:SIGNALout:OSC:ENABLE",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "so_osc_mode_ch1",
-        "scpiCmd":  ":ZWLia:SIGNALout:OSC:MODE",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       1
-                   ]
-    },
-    {
-        "name":  "so_osc_rst_ch1",
-        "scpiCmd":  ":ZWLia:SIGNALout:OSC:RST",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "so_osc_phase_ch1",
-        "scpiCmd":  ":ZWLia:SIGNALout:OSC:PHASE",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "so_osc_freq_ch1",
-        "scpiCmd":  ":ZWLia:SIGNALout:OSC:FREQ",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       1000000
-                   ]
-    },
-    {
-        "name":  "so_enable_ch1",
-        "scpiCmd":  ":ZWLia:SIGNALout:ENABLE",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "so_source1_ch1",
-        "scpiCmd":  ":ZWLia:SIGNALout:SOURce1",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "so_scaling1_ch1",
-        "scpiCmd":  ":ZWLia:SIGNALout:SCALing1",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0.2
-                   ]
-    },
-    {
-        "name":  "so_offset_enable_ch1",
-        "scpiCmd":  ":ZWLia:SIGNALout:OFFSet:ENABLE",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "so_offset_ch1",
-        "scpiCmd":  ":ZWLia:SIGNALout:OFFSet",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "so_limit_enable_ch1",
-        "scpiCmd":  ":ZWLia:SIGNALout:LIMit:ENABLE",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       1
-                   ]
-    },
-    {
-        "name":  "so_upper_limit_ch1",
-        "scpiCmd":  ":ZWLia:SIGNALout:LIMit:UPPer",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       2
-                   ]
-    },
-    {
-        "name":  "so_lower_limit_ch1",
-        "scpiCmd":  ":ZWLia:SIGNALout:LIMit:LOWer",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       -2
-                   ]
-    },
-    {
-        "name":  "so_constant1_ch1",
-        "scpiCmd":  ":ZWLia:SIGNALout:CONStant1",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "so_osc_type_ch1",
-        "scpiCmd":  ":ZWLia:SIGNALout:OSC:TYPE",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       4
-                   ]
-    },
-    {
-        "name":  "so_osc_pluse_duty_ch1",
-        "scpiCmd":  ":ZWLia:SIGNALout:OSC:PLUSE:DUTY",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "so_osc_scaling_ch1",
-        "scpiCmd":  ":ZWLia:SIGNALout:OSC:SCALing",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0.5
-                   ]
-    },
-    {
-        "name":  "so_add_osc1_enable_ch1",
-        "scpiCmd":  ":ZWLia:SIGNALout:ADD:OSC1:ENABLE",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "so_add_osc2_enable_ch1",
-        "scpiCmd":  ":ZWLia:SIGNALout:ADD:OSC2:ENABLE",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "so_osc_enable_ch2",
-        "scpiCmd":  ":ZWLia:SIGNALout:OSC:ENABLE",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "so_osc_mode_ch2",
-        "scpiCmd":  ":ZWLia:SIGNALout:OSC:MODE",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       1
-                   ]
-    },
-    {
-        "name":  "so_osc_rst_ch2",
-        "scpiCmd":  ":ZWLia:SIGNALout:OSC:RST",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "so_osc_phase_ch2",
-        "scpiCmd":  ":ZWLia:SIGNALout:OSC:PHASE",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "so_osc_freq_ch2",
-        "scpiCmd":  ":ZWLia:SIGNALout:OSC:FREQ",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       1000000
-                   ]
-    },
-    {
-        "name":  "so_enable_ch2",
-        "scpiCmd":  ":ZWLia:SIGNALout:ENABLE",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "so_source1_ch2",
-        "scpiCmd":  ":ZWLia:SIGNALout:SOURce1",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "so_scaling1_ch2",
-        "scpiCmd":  ":ZWLia:SIGNALout:SCALing1",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0.2
-                   ]
-    },
-    {
-        "name":  "so_offset_enable_ch2",
-        "scpiCmd":  ":ZWLia:SIGNALout:OFFSet:ENABLE",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "so_offset_ch2",
-        "scpiCmd":  ":ZWLia:SIGNALout:OFFSet",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "so_limit_enable_ch2",
-        "scpiCmd":  ":ZWLia:SIGNALout:LIMit:ENABLE",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       1
-                   ]
-    },
-    {
-        "name":  "so_upper_limit_ch2",
-        "scpiCmd":  ":ZWLia:SIGNALout:LIMit:UPPer",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       2
-                   ]
-    },
-    {
-        "name":  "so_lower_limit_ch2",
-        "scpiCmd":  ":ZWLia:SIGNALout:LIMit:LOWer",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       -2
-                   ]
-    },
-    {
-        "name":  "so_constant1_ch2",
-        "scpiCmd":  ":ZWLia:SIGNALout:CONStant1",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "so_osc_type_ch2",
-        "scpiCmd":  ":ZWLia:SIGNALout:OSC:TYPE",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       4
-                   ]
-    },
-    {
-        "name":  "so_osc_pluse_duty_ch2",
-        "scpiCmd":  ":ZWLia:SIGNALout:OSC:PLUSE:DUTY",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "so_osc_scaling_ch2",
-        "scpiCmd":  ":ZWLia:SIGNALout:OSC:SCALing",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0.5
-                   ]
-    },
-    {
-        "name":  "so_add_osc1_enable_ch2",
-        "scpiCmd":  ":ZWLia:SIGNALout:ADD:OSC1:ENABLE",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "so_add_osc2_enable_ch2",
-        "scpiCmd":  ":ZWLia:SIGNALout:ADD:OSC2:ENABLE",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "demo_ref_mode_ch1",
-        "scpiCmd":  ":ZWLia:DEMO:REF:MODE",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "demo_osc_freq_ch1",
-        "scpiCmd":  ":ZWLia:DEMO:OSC:FREQ",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       100000
-                   ]
-    },
-    {
-        "name":  "demo_osc_phase_ch1",
-        "scpiCmd":  ":ZWLia:DEMO:OSC:PHASE",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "demo_osc_phasemode_ch1",
-        "scpiCmd":  ":ZWLia:DEMO:OSC:PHASEMODE",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "demo_osc_harm_ch1",
-        "scpiCmd":  ":ZWLia:DEMO:OSC:HARM",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       1
-                   ]
-    },
-    {
-        "name":  "demo_source_ch1",
-        "scpiCmd":  ":ZWLia:DEMO:SOURce",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "demo_fir_order_ch1",
-        "scpiCmd":  ":ZWLia:DEMO:FIR:ORDER",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       1,
-                       3
-                   ]
-    },
-    {
-        "name":  "demo_fir_tc_ch1",
-        "scpiCmd":  ":ZWLia:DEMO:FIR:TC",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       5
-                   ]
-    },
-    {
-        "name":  "demo_sinc_state_ch1",
-        "scpiCmd":  ":ZWLia:DEMO:SINC:ENABLE",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "demo_scale_ch1",
-        "scpiCmd":  ":ZWLia:DEMO:SCALE",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       1
-                   ]
-    },
-    {
-        "name":  "daq_sample_rate",
-        "scpiCmd":  ":ZWLia:DAQ:DATA:SR",
-        "type":  [
-                     0
-                 ],
-        "params":  [
-                       1
-                   ]
-    },
-    {
-        "name":  "daq_source",
-        "scpiCmd":  ":ZWLia:DAQ:DATA:SOURCE",
-        "type":  [
-                     3
-                 ],
-        "params":  [
-                       "0"
-                   ]
-    },
-    {
-        "name":  "daq_run",
-        "scpiCmd":  ":ZWLia:DAQ:RUN:ENABLE",
-        "type":  [
-                     0
-                 ],
-        "params":  [
-                       0
-                   ]
-    },
-    {
-        "name":  "daq_signal",
-        "scpiCmd":  ":ZWLia:DAQ:SIGNAL:ENABLE",
-        "type":  [
-                     0
-                 ],
-        "params":  [
-                       0
-                   ]
-    },
-    {
-        "name":  "scope_sample_ch1",
-        "scpiCmd":  ":ZWLia:SCOPE:DATA:SR",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "scope_sample_ch2",
-        "scpiCmd":  ":ZWLia:SCOPE:DATA:SR",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "scope_source_ch1",
-        "scpiCmd":  ":ZWLia:SCOPE:DATA:SOURCE",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "scope_source_ch2",
-        "scpiCmd":  ":ZWLia:SCOPE:DATA:SOURCE",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "scope_ch_switch_ch1",
-        "scpiCmd":  ":ZWLia:SCOPE:CH:SWITCH",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "scope_ch_switch_ch2",
-        "scpiCmd":  ":ZWLia:SCOPE:CH:SWITCH",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "scope_average_en",
-        "scpiCmd":  ":ZWLia:SCOPE:AVERAGE:ENABLE",
-        "type":  [
-                     0
-                 ],
-        "params":  [
-                       0
-                   ]
-    },
-    {
-        "name":  "scope_run",
-        "scpiCmd":  ":ZWLia:SCOPE:RUN:ENABLE",
-        "type":  [
-                     0
-                 ],
-        "params":  [
-                       0
-                   ]
-    },
-    {
-        "name":  "scope_signal",
-        "scpiCmd":  ":ZWLia:SCOPE:SIGNAL:ENABLE",
-        "type":  [
-                     0
-                 ],
-        "params":  [
-                       0
-                   ]
-    },
-    {
-        "name":  "pwa_signal",
-        "scpiCmd":  ":ZWLia:PWA:SIGNAL:ENABLE",
-        "type":  [
-                     0
-                 ],
-        "params":  [
-                       0
-                   ]
-    },
-    {
-        "name":  "trig_smplen",
-        "scpiCmd":  ":ZWLia:TRIG:SMPLEN",
-        "type":  [
-                     0
-                 ],
-        "params":  [
-                       16384
-                   ]
-    },
-    {
-        "name":  "trig_times",
-        "scpiCmd":  ":ZWLia:TRIG:TIMES",
-        "type":  [
-                     0
-                 ],
-        "params":  [
-                       1
-                   ]
-    },
-    {
-        "name":  "trig_source",
-        "scpiCmd":  ":ZWLia:TRIG:SOURce",
-        "type":  [
-                     0
-                 ],
-        "params":  [
-                       36
-                   ]
-    },
-    {
-        "name":  "trig_type",
-        "scpiCmd":  ":ZWLia:TRIG:TYPE",
-        "type":  [
-                     0
-                 ],
-        "params":  [
-                       1
-                   ]
-    },
-    {
-        "name":  "trig_level",
-        "scpiCmd":  ":ZWLia:TRIG:LEVEL",
-        "type":  [
-                     4
-                 ],
-        "params":  [
-                       1
-                   ]
-    },
-    {
-        "name":  "trig_hysteresis",
-        "scpiCmd":  ":ZWLia:TRIG:HYSteresis",
-        "type":  [
-                     4
-                 ],
-        "params":  [
-                       0.1
-                   ]
-    },
-    {
-        "name":  "trig_hold_off",
-        "scpiCmd":  ":ZWLia:TRIG:HOLDOFF",
-        "type":  [
-                     4
-                 ],
-        "params":  [
-                       0.1
-                   ]
-    },
-    {
-        "name":  "trig_delay",
-        "scpiCmd":  ":ZWLia:TRIG:DELAY",
-        "type":  [
-                     4
-                 ],
-        "params":  [
-                       1E-06
-                   ]
-    },
-    {
-        "name":  "trig_pluse_width",
-        "scpiCmd":  ":ZWLia:TRIG:PLUSE:WIDTH",
-        "type":  [
-                     0
-                 ],
-        "params":  [
-                       0
-                   ]
-    },
-    {
-        "name":  "ao_upper_ch1",
-        "scpiCmd":  ":ZWLia:AUXOUT:UPPER",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       10
-                   ]
-    },
-    {
-        "name":  "ao_upper_ch2",
-        "scpiCmd":  ":ZWLia:AUXOUT:UPPER",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       10
-                   ]
-    },
-    {
-        "name":  "ao_lower_ch1",
-        "scpiCmd":  ":ZWLia:AUXOUT:LOWER",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       -10
-                   ]
-    },
-    {
-        "name":  "ao_lower_ch2",
-        "scpiCmd":  ":ZWLia:AUXOUT:LOWER",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       -10
-                   ]
-    },
-    {
-        "name":  "ao_source_ch1",
-        "scpiCmd":  ":ZWLia:AUXOUT:SOURce",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "ao_dec_ch1",
-        "scpiCmd":  ":ZWLia:AUXOUT:DEC",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       1,
-                       1
-                   ]
-    },
-    {
-        "name":  "ao_scale_ch1",
-        "scpiCmd":  ":ZWLia:AUXOUT:SCALE",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       1
-                   ]
-    },
-    {
-        "name":  "ao_offset_ch1",
-        "scpiCmd":  ":ZWLia:AUXOUT:OFFSET",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "ao_state_ch1",
-        "scpiCmd":  ":ZWLia:AUXOUT:ENABLE",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "ao_dcvalue_ch1",
-        "scpiCmd":  ":ZWLia:AUXOUT:DCVOL",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       1
-                   ]
-    },
-    {
-        "name":  "ao_dcswitch_ch1",
-        "scpiCmd":  ":ZWLia:AUXOUT:DCVOL:ENABLE",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "ao_source_ch2",
-        "scpiCmd":  ":ZWLia:AUXOUT:SOURce",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "ao_dec_ch2",
-        "scpiCmd":  ":ZWLia:AUXOUT:DEC",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       2,
-                       1
-                   ]
-    },
-    {
-        "name":  "ao_scale_ch2",
-        "scpiCmd":  ":ZWLia:AUXOUT:SCALE",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       1
-                   ]
-    },
-    {
-        "name":  "ao_offset_ch2",
-        "scpiCmd":  ":ZWLia:AUXOUT:OFFSET",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "ao_state_ch2",
-        "scpiCmd":  ":ZWLia:AUXOUT:ENABLE",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "ao_dcvalue_ch2",
-        "scpiCmd":  ":ZWLia:AUXOUT:DCVOL",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       1
-                   ]
-    },
-    {
-        "name":  "ao_dcswitch_ch2",
-        "scpiCmd":  ":ZWLia:AUXOUT:DCVOL:ENABLE",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "ao_dcvalue_ch3",
-        "scpiCmd":  ":ZWLia:AUXOUT:DCVOL",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       3,
-                       1
-                   ]
-    },
-    {
-        "name":  "ao_dcswitch_ch3",
-        "scpiCmd":  ":ZWLia:AUXOUT:DCVOL:ENABLE",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       3,
-                       0
-                   ]
-    },
-    {
-        "name":  "ao_dcvalue_ch4",
-        "scpiCmd":  ":ZWLia:AUXOUT:DCVOL",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       4,
-                       1
-                   ]
-    },
-    {
-        "name":  "ao_dcswitch_ch4",
-        "scpiCmd":  ":ZWLia:AUXOUT:DCVOL:ENABLE",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       4,
-                       0
-                   ]
-    },
-    {
-        "name":  "ai_impedance_ch1",
-        "scpiCmd":  ":ZWLia:AUXINPUT:IMPedance",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "ai_impedance_ch2",
-        "scpiCmd":  ":ZWLia:AUXINPUT:IMPedance",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "ai_impedance_ch3",
-        "scpiCmd":  ":ZWLia:AUXINPUT:IMPedance",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       3,
-                       0
-                   ]
-    },
-    {
-        "name":  "ai_impedance_ch4",
-        "scpiCmd":  ":ZWLia:AUXINPUT:IMPedance",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       4,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_p_ch1",
-        "scpiCmd":  ":ZWLia:PID:P",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_i_ch1",
-        "scpiCmd":  ":ZWLia:PID:I",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_d_ch1",
-        "scpiCmd":  ":ZWLia:PID:D",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_ki_en_ch1",
-        "scpiCmd":  ":ZWLia:PID:KI:ENABLE",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_filter_ch1",
-        "scpiCmd":  ":ZWLia:PID:FILTER",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_setpoint_ch1",
-        "scpiCmd":  ":ZWLia:PID:SETPOINT",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_dec_ch1",
-        "scpiCmd":  ":ZWLia:PID:DEC",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_invert_ch1",
-        "scpiCmd":  ":ZWLia:PID:INVERT",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_source_ch1",
-        "scpiCmd":  ":ZWLia:PID:SOURCE",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_enable_ch1",
-        "scpiCmd":  ":ZWLia:PID:ENABLE",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_p_ch2",
-        "scpiCmd":  ":ZWLia:PID:P",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_i_ch2",
-        "scpiCmd":  ":ZWLia:PID:I",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_d_ch2",
-        "scpiCmd":  ":ZWLia:PID:D",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_ki_en_ch2",
-        "scpiCmd":  ":ZWLia:PID:KI:ENABLE",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_filter_ch2",
-        "scpiCmd":  ":ZWLia:PID:FILTER",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_setpoint_ch2",
-        "scpiCmd":  ":ZWLia:PID:SETPOINT",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_dec_ch2",
-        "scpiCmd":  ":ZWLia:PID:DEC",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_invert_ch2",
-        "scpiCmd":  ":ZWLia:PID:INVERT",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_source_ch2",
-        "scpiCmd":  ":ZWLia:PID:SOURCE",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_enable_ch2",
-        "scpiCmd":  ":ZWLia:PID:ENABLE",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_p_ch3",
-        "scpiCmd":  ":ZWLia:PID:P",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       3,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_i_ch3",
-        "scpiCmd":  ":ZWLia:PID:I",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       3,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_d_ch3",
-        "scpiCmd":  ":ZWLia:PID:D",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       3,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_ki_en_ch3",
-        "scpiCmd":  ":ZWLia:PID:KI:ENABLE",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       3,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_filter_ch3",
-        "scpiCmd":  ":ZWLia:PID:FILTER",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       3,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_setpoint_ch3",
-        "scpiCmd":  ":ZWLia:PID:SETPOINT",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       3,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_dec_ch3",
-        "scpiCmd":  ":ZWLia:PID:DEC",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       3,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_invert_ch3",
-        "scpiCmd":  ":ZWLia:PID:INVERT",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       3,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_source_ch3",
-        "scpiCmd":  ":ZWLia:PID:SOURCE",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       3,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_enable_ch3",
-        "scpiCmd":  ":ZWLia:PID:ENABLE",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       3,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_p_ch4",
-        "scpiCmd":  ":ZWLia:PID:P",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       4,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_i_ch4",
-        "scpiCmd":  ":ZWLia:PID:I",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       4,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_d_ch4",
-        "scpiCmd":  ":ZWLia:PID:D",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       4,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_ki_en_ch4",
-        "scpiCmd":  ":ZWLia:PID:KI:ENABLE",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       4,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_filter_ch4",
-        "scpiCmd":  ":ZWLia:PID:FILTER",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       4,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_setpoint_ch4",
-        "scpiCmd":  ":ZWLia:PID:SETPOINT",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       4,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_dec_ch4",
-        "scpiCmd":  ":ZWLia:PID:DEC",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       4,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_invert_ch4",
-        "scpiCmd":  ":ZWLia:PID:INVERT",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       4,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_source_ch4",
-        "scpiCmd":  ":ZWLia:PID:SOURCE",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       4,
-                       0
-                   ]
-    },
-    {
-        "name":  "pid_enable_ch4",
-        "scpiCmd":  ":ZWLia:PID:ENABLE",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       4,
-                       0
-                   ]
-    },
-    {
-        "name":  "sweep_param",
-        "scpiCmd":  ":ZWLia:SWEEP:PARAM",
-        "type":  [
-                     4
-                 ],
-        "params":  [
-                       0
-                   ]
-    },
-    {
-        "name":  "sweep_start",
-        "scpiCmd":  ":ZWLia:SWEEP:START",
-        "type":  [
-                     4
-                 ],
-        "params":  [
-                       0
-                   ]
-    },
-    {
-        "name":  "sweep_stop",
-        "scpiCmd":  ":ZWLia:SWEEP:STOP",
-        "type":  [
-                     4
-                 ],
-        "params":  [
-                       0
-                   ]
-    },
-    {
-        "name":  "sweep_points",
-        "scpiCmd":  ":ZWLia:SWEEP:POINTS",
-        "type":  [
-                     4
-                 ],
-        "params":  [
-                       0
-                   ]
-    },
-    {
-        "name":  "sweep_mode",
-        "scpiCmd":  ":ZWLia:SWEEP:MODE",
-        "type":  [
-                     4
-                 ],
-        "params":  [
-                       0
-                   ]
-    },
-    {
-        "name":  "sweep_appmode",
-        "scpiCmd":  ":ZWLia:SWEEP:APPMODE",
-        "type":  [
-                     4
-                 ],
-        "params":  [
-                       0
-                   ]
-    },
-    {
-        "name":  "sweep_precision",
-        "scpiCmd":  ":ZWLia:SWEEP:PRECISION",
-        "type":  [
-                     4
-                 ],
-        "params":  [
-                       0
-                   ]
-    },
-    {
-        "name":  "sweep_single",
-        "scpiCmd":  ":ZWLia:SWEEP:SINGLE:ENABLE",
-        "type":  [
-                     4
-                 ],
-        "params":  [
-                       0
-                   ]
-    },
-    {
-        "name":  "sweep_run",
-        "scpiCmd":  ":ZWLia:SWEEP:RUN:ENABLE",
-        "type":  [
-                     4
-                 ],
-        "params":  [
-                       0
-                   ]
-    },
-    {
-        "name":  "pcnt_en_ch1",
-        "scpiCmd":  ":ZWLia:PCNT:ENABLE",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "pcnt_mode_ch1",
-        "scpiCmd":  ":ZWLia:PCNT:MODE",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "pcnt_period_ch1",
-        "scpiCmd":  ":ZWLia:PCNT:PERIOD",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "pcnt_input_ch1",
-        "scpiCmd":  ":ZWLia:PCNT:INPUT",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "pcnt_edge_ch1",
-        "scpiCmd":  ":ZWLia:PCNT:EDGE",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "pcnt_en_ch2",
-        "scpiCmd":  ":ZWLia:PCNT:ENABLE",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "pcnt_mode_ch2",
-        "scpiCmd":  ":ZWLia:PCNT:MODE",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "pcnt_period_ch2",
-        "scpiCmd":  ":ZWLia:PCNT:PERIOD",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "pcnt_input_ch2",
-        "scpiCmd":  ":ZWLia:PCNT:INPUT",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "pcnt_edge_ch2",
-        "scpiCmd":  ":ZWLia:PCNT:EDGE",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "pcnt_en_ch3",
-        "scpiCmd":  ":ZWLia:PCNT:ENABLE",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       3,
-                       0
-                   ]
-    },
-    {
-        "name":  "pcnt_mode_ch3",
-        "scpiCmd":  ":ZWLia:PCNT:MODE",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       3,
-                       0
-                   ]
-    },
-    {
-        "name":  "pcnt_period_ch3",
-        "scpiCmd":  ":ZWLia:PCNT:PERIOD",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       3,
-                       0
-                   ]
-    },
-    {
-        "name":  "pcnt_input_ch3",
-        "scpiCmd":  ":ZWLia:PCNT:INPUT",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       3,
-                       0
-                   ]
-    },
-    {
-        "name":  "pcnt_edge_ch3",
-        "scpiCmd":  ":ZWLia:PCNT:EDGE",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       3,
-                       0
-                   ]
-    },
-    {
-        "name":  "pcnt_en_ch4",
-        "scpiCmd":  ":ZWLia:PCNT:ENABLE",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       4,
-                       0
-                   ]
-    },
-    {
-        "name":  "pcnt_mode_ch4",
-        "scpiCmd":  ":ZWLia:PCNT:MODE",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       4,
-                       0
-                   ]
-    },
-    {
-        "name":  "pcnt_period_ch4",
-        "scpiCmd":  ":ZWLia:PCNT:PERIOD",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       4,
-                       0
-                   ]
-    },
-    {
-        "name":  "pcnt_input_ch4",
-        "scpiCmd":  ":ZWLia:PCNT:INPUT",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       4,
-                       0
-                   ]
-    },
-    {
-        "name":  "pcnt_edge_ch4",
-        "scpiCmd":  ":ZWLia:PCNT:EDGE",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       4,
-                       0
-                   ]
-    },
-    {
-        "name":  "awg_data_upload",
-        "scpiCmd":  ":ZWLia:AWG:DATA:UPLOAD",
-        "type":  [
-                     0
-                 ],
-        "params":  [
-                       1
-                   ]
-    },
-    {
-        "name":  "awg_play_en_ch1",
-        "scpiCmd":  ":ZWLia:AWG:PLAY:ENABLE",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "awg_play_mode_ch1",
-        "scpiCmd":  ":ZWLia:AWG:PLAY:MODE",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "awg_play_param_ch1",
-        "scpiCmd":  ":ZWLia:AWG:PLAY:PARAM",
-        "type":  [
-                     0,
-                     0,
-                     4,
-                     4,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0,
-                       0,
-                       0,
-                       0
-                   ]
-    },
-    {
-        "name":  "awg_play_en_ch2",
-        "scpiCmd":  ":ZWLia:AWG:PLAY:ENABLE",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "awg_play_mode_ch2",
-        "scpiCmd":  ":ZWLia:AWG:PLAY:MODE",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "awg_play_param_ch2",
-        "scpiCmd":  ":ZWLia:AWG:PLAY:PARAM",
-        "type":  [
-                     0,
-                     0,
-                     4,
-                     4,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0,
-                       0,
-                       0,
-                       0
-                   ]
-    },
-    {
-        "name":  "amfm_en",
-        "scpiCmd":  ":ZWLia:AMFM:ENABLE",
-        "type":  [
-                     0
-                 ],
-        "params":  [
-                       0
-                   ]
-    },
-    {
-        "name":  "amfm_mode",
-        "scpiCmd":  ":ZWLia:AMFM:MODE",
-        "type":  [
-                     0
-                 ],
-        "params":  [
-                       0
-                   ]
-    },
-    {
-        "name":  "amfm_amparam",
-        "scpiCmd":  ":ZWLia:AMFM:AM:PARAM",
-        "type":  [
-                     4,
-                     4,
-                     4
-                 ],
-        "params":  [
-                       0,
-                       0,
-                       0
-                   ]
-    },
-    {
-        "name":  "amfm_fmparam",
-        "scpiCmd":  ":ZWLia:AMFM:FM:PARAM",
-        "type":  [
-                     4,
-                     4
-                 ],
-        "params":  [
-                       0,
-                       0
-                   ]
-    },
-    {
-        "name":  "trig_level_ch1",
-        "scpiCmd":  ":ZWLia:VERIFY:TRIG:OFFSET",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "trig_level_ch2",
-        "scpiCmd":  ":ZWLia:VERIFY:TRIG:OFFSET",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "trig_level_ch3",
-        "scpiCmd":  ":ZWLia:VERIFY:TRIG:OFFSET",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       3,
-                       0
-                   ]
-    },
-    {
-        "name":  "trig_level_ch4",
-        "scpiCmd":  ":ZWLia:VERIFY:TRIG:OFFSET",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       4,
-                       0
-                   ]
-    },
-    {
-        "name":  "v1_ch1",
-        "scpiCmd":  ":ZWLia:VERIFY:VONE:OFFSET",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "v1_ch2",
-        "scpiCmd":  ":ZWLia:VERIFY:VONE:OFFSET",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "v1_ch3",
-        "scpiCmd":  ":ZWLia:VERIFY:VONE:OFFSET",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       3,
-                       0
-                   ]
-    },
-    {
-        "name":  "v1_ch4",
-        "scpiCmd":  ":ZWLia:VERIFY:VONE:OFFSET",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       4,
-                       0
-                   ]
-    },
-    {
-        "name":  "v2_ch1",
-        "scpiCmd":  ":ZWLia:VERIFY:VTWO:OFFSET",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "v2_ch2",
-        "scpiCmd":  ":ZWLia:VERIFY:VTWO:OFFSET",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "v2_ch3",
-        "scpiCmd":  ":ZWLia:VERIFY:VTWO:OFFSET",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       3,
-                       0
-                   ]
-    },
-    {
-        "name":  "v2_ch4",
-        "scpiCmd":  ":ZWLia:VERIFY:VTWO:OFFSET",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       4,
-                       0
-                   ]
-    },
-    {
-        "name":  "so_ch1",
-        "scpiCmd":  ":ZWLia:VERIFY:SO:OFFSET",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "so_ch2",
-        "scpiCmd":  ":ZWLia:VERIFY:SO:OFFSET",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    },
-    {
-        "name":  "so_ch3",
-        "scpiCmd":  ":ZWLia:VERIFY:SO:OFFSET",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       3,
-                       0
-                   ]
-    },
-    {
-        "name":  "so_ch4",
-        "scpiCmd":  ":ZWLia:VERIFY:SO:OFFSET",
-        "type":  [
-                     0,
-                     4
-                 ],
-        "params":  [
-                       4,
-                       0
-                   ]
-    },
-    {
-        "name":  "verify_si_switch_ch1",
-        "scpiCmd":  ":ZWLia:VERIFY:SI:SWITCH",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       1,
-                       0
-                   ]
-    },
-    {
-        "name":  "verify_si_switch_ch2",
-        "scpiCmd":  ":ZWLia:VERIFY:SI:SWITCH",
-        "type":  [
-                     0,
-                     0
-                 ],
-        "params":  [
-                       2,
-                       0
-                   ]
-    }
+[
+{"name":"active_present","scpiCmd":":SYStem:ACTIVEPRE","type":[0],"params":[0]},
+{"name":"default_present","scpiCmd":":SYStem:DEFAULTPRE","type":[0],"params":[0]},
+{"name":"debug_read_plreg","scpiCmd":":DEVice:PL:REG?","type":[0],"params":[0]},
+{"name":"debug_write_plreg","scpiCmd":":DEVice:PL:REG","type":[0,0],"params":[0,0]},
+{"name":"ref_get_freq","scpiCmd":":ZWLia:REF:FREQuency?","type":[0],"params":[0]},
+{"name":"dev_clk_lock","scpiCmd":":DEVice:CLK:LOCK?","type":[0],"params":[0]},
+{"name":"trig_force","scpiCmd":":ZWLia:TRIG:FORCE","type":[0],"params":[0]},
+{"name":"sys_static_ip","scpiCmd":":SYStem:NETWORK:STATIC:IP","type":[5,5,5],"params":["\"192.168.1.10\"","\"255.255.255.0\"","\"192.168.1.1\""]},
+{"name":"query_demo_adata","scpiCmd":":ZWLia:DAQ:ADATA:QUERY?","type":[0],"params":[0]},
+{"name":"query_demo_rdata","scpiCmd":":ZWLia:DAQ:RDATA:QUERY?","type":[],"params":[]},
+{"name":"sys_dhcp_en","scpiCmd":":SYStem:NETWORK:DHCP:ENABLE","type":[0],"params":[0]},
+{"name":"dev_clk_source","scpiCmd":":DEVice:CLK:SOURCE","type":[0],"params":[0]},
+{"name":"dev_trig_source","scpiCmd":":DEVice:TRIG:SOURCE","type":[0],"params":[0]},
+{"name":"ref_source","scpiCmd":":ZWLia:REF:SOURce","type":[0],"params":[0]},
+{"name":"ref_hys_high","scpiCmd":":ZWLia:REF:HYS:HIGH","type":[4],"params":[0]},
+{"name":"ref_hys_low","scpiCmd":":ZWLia:REF:HYS:LOW","type":[4],"params":[0]},
+{"name":"ref_filter_win","scpiCmd":":ZWLia:REF:FILTER:WINDOWS","type":[0],"params":[0]},
+{"name":"ref_stat_period","scpiCmd":":ZWLia:REF:STAT:PERIOD","type":[4],"params":[100]},
+{"name":"ref_timeout","scpiCmd":":ZWLia:REF:TIMEOUT","type":[4],"params":[0.1]},
+{"name":"si_vol_couping_ch1","scpiCmd":":ZWLia:SIGNALin:VOL:COUPING","type":[0,0],"params":[1,0]},
+{"name":"si_vol_impedance_ch1","scpiCmd":":ZWLia:SIGNALin:VOL:IMPEDANCE","type":[0,0],"params":[1,1]},
+{"name":"si_vol_range_ch1","scpiCmd":":ZWLia:SIGNALin:VOL:RANGE","type":[0,0],"params":[1,1]},
+{"name":"si_vol_couping_ch2","scpiCmd":":ZWLia:SIGNALin:VOL:COUPING","type":[0,0],"params":[2,0]},
+{"name":"si_vol_impedance_ch2","scpiCmd":":ZWLia:SIGNALin:VOL:IMPEDANCE","type":[0,0],"params":[2,1]},
+{"name":"si_vol_range_ch2","scpiCmd":":ZWLia:SIGNALin:VOL:RANGE","type":[0,0],"params":[2,1]},
+{"name":"refinput_wave_mode_ch1","scpiCmd":":ZWLia:REFin:WAVEMODE","type":[0,0],"params":[1,0]},
+{"name":"refinput_wave_mode_ch2","scpiCmd":":ZWLia:REFin:WAVEMODE","type":[0,0],"params":[2,0]},
+{"name":"osc0_freq","scpiCmd":":ZWLia:OSC:FREQ","type":[4,4],"params":[0,100000]},
+{"name":"osc1_freq","scpiCmd":":ZWLia:OSC:FREQ","type":[4,4],"params":[1,100000]},
+{"name":"osc2_freq","scpiCmd":":ZWLia:OSC:FREQ","type":[4,4],"params":[2,100000]},
+{"name":"osc3_freq","scpiCmd":":ZWLia:OSC:FREQ","type":[4,4],"params":[3,100000]},
+{"name":"osc4_freq","scpiCmd":":ZWLia:OSC:FREQ","type":[4,4],"params":[4,100000]},
+{"name":"osc5_freq","scpiCmd":":ZWLia:OSC:FREQ","type":[4,4],"params":[5,100000]},
+{"name":"osc6_freq","scpiCmd":":ZWLia:OSC:FREQ","type":[4,4],"params":[6,100000]},
+{"name":"osc7_freq","scpiCmd":":ZWLia:OSC:FREQ","type":[4,4],"params":[7,100000]},
+{"name":"osc_sync","scpiCmd":":ZWLia:OSC:SYNC","type":[0],"params":[0]},
+{"name":"so_enable_ch1","scpiCmd":":ZWLia:SIGNALout:ENABLE","type":[4,4],"params":[1,0]},
+{"name":"so_source1_ch1","scpiCmd":":ZWLia:SIGNALout:SOURce1","type":[4,4],"params":[1,0]},
+{"name":"so_scaling1_ch1","scpiCmd":":ZWLia:SIGNALout:SCALing1","type":[4,4],"params":[1,1]},
+{"name":"so_offset_enable_ch1","scpiCmd":":ZWLia:SIGNALout:OFFSet:ENABLE","type":[4,4],"params":[1,1]},
+{"name":"so_offset_ch1","scpiCmd":":ZWLia:SIGNALout:OFFSet","type":[4,4],"params":[1,0]},
+{"name":"so_limit_enable_ch1","scpiCmd":":ZWLia:SIGNALout:LIMit:ENABLE","type":[4,4],"params":[1,1]},
+{"name":"so_upper_limit_ch1","scpiCmd":":ZWLia:SIGNALout:LIMit:UPPer","type":[4,4],"params":[1,2]},
+{"name":"so_lower_limit_ch1","scpiCmd":":ZWLia:SIGNALout:LIMit:LOWer","type":[4,4],"params":[1,-2]},
+{"name":"so_constant1_ch1","scpiCmd":":ZWLia:SIGNALout:CONStant1","type":[4,4],"params":[1,0]},
+{"name":"so_enable_ch2","scpiCmd":":ZWLia:SIGNALout:ENABLE","type":[4,4],"params":[2,0]},
+{"name":"so_source1_ch2","scpiCmd":":ZWLia:SIGNALout:SOURce1","type":[4,4],"params":[2,0]},
+{"name":"so_scaling1_ch2","scpiCmd":":ZWLia:SIGNALout:SCALing1","type":[4,4],"params":[2,1]},
+{"name":"so_offset_enable_ch2","scpiCmd":":ZWLia:SIGNALout:OFFSet:ENABLE","type":[4,4],"params":[2,1]},
+{"name":"so_offset_ch2","scpiCmd":":ZWLia:SIGNALout:OFFSet","type":[4,4],"params":[2,0]},
+{"name":"so_limit_enable_ch2","scpiCmd":":ZWLia:SIGNALout:LIMit:ENABLE","type":[4,4],"params":[2,1]},
+{"name":"so_upper_limit_ch2","scpiCmd":":ZWLia:SIGNALout:LIMit:UPPer","type":[4,4],"params":[2,2]},
+{"name":"so_lower_limit_ch2","scpiCmd":":ZWLia:SIGNALout:LIMit:LOWer","type":[4,4],"params":[2,-2]},
+{"name":"so_constant1_ch2","scpiCmd":":ZWLia:SIGNALout:CONStant1","type":[4,4],"params":[2,0]},
+{"name":"demo_ref_mode_ch1","scpiCmd":":ZWLia:DEMO:REF:MODE","type":[4,4],"params":[1,0]},
+{"name":"demo_osc_number_ch1","scpiCmd":":ZWLia:DEMO:OSC:NUMBER","type":[4,4],"params":[1,0]},
+{"name":"demo_osc_phase_ch1","scpiCmd":":ZWLia:DEMO:OSC:PHASE","type":[4,4],"params":[1,0]},
+{"name":"demo_osc_harm_ch1","scpiCmd":":ZWLia:DEMO:OSC:HARM","type":[4,4],"params":[1,1]},
+{"name":"demo_osc_mode_ch1_out1","scpiCmd":":ZWLia:DEMO:OSC:MODE","type":[4,4,4],"params":[1,1,0]},
+{"name":"demo_osc_duty_ch1_out1","scpiCmd":":ZWLia:DEMO:OSC:PULSE:DUTY","type":[4,4,4],"params":[1,1,50]},
+{"name":"demo_osc_amp_ch1_out1","scpiCmd":":ZWLia:DEMO:OSC:AMP","type":[4,4,4],"params":[1,1,1]},
+{"name":"demo_osc_amp_en_ch1_out1","scpiCmd":":ZWLia:DEMO:OSC:AMP:ENABLE","type":[4,4,4],"params":[1,1,0]},
+{"name":"demo_osc_mode_ch1_out2","scpiCmd":":ZWLia:DEMO:OSC:MODE","type":[4,4,4],"params":[1,2,0]},
+{"name":"demo_osc_duty_ch1_out2","scpiCmd":":ZWLia:DEMO:OSC:PULSE:DUTY","type":[4,4,4],"params":[1,2,50]},
+{"name":"demo_osc_amp_ch1_out2","scpiCmd":":ZWLia:DEMO:OSC:AMP","type":[4,4,4],"params":[1,2,1]},
+{"name":"demo_osc_amp_en_ch1_out2","scpiCmd":":ZWLia:DEMO:OSC:AMP:ENABLE","type":[4,4,4],"params":[1,2,0]},
+{"name":"demo_ref_source_ch1","scpiCmd":":ZWLia:DEMO:REF:SOURce","type":[4,4],"params":[1,0]},
+{"name":"demo_source_ch1","scpiCmd":":ZWLia:DEMO:DATA:SOURce","type":[4,4],"params":[1,0]},
+{"name":"demo_fir_order_ch1","scpiCmd":":ZWLia:DEMO:FIR:ORDER","type":[4,4],"params":[1,3]},
+{"name":"demo_fir_tc_ch1","scpiCmd":":ZWLia:DEMO:FIR:TC","type":[4,4],"params":[1,0.2]},
+{"name":"demo_sinc_state_ch1","scpiCmd":":ZWLia:DEMO:SINC:ENABLE","type":[4,4],"params":[1,0]},
+{"name":"demo_scale_ch1","scpiCmd":":ZWLia:DEMO:SCALE","type":[4,4],"params":[1,1]},
+{"name":"demo_state_ch1","scpiCmd":":ZWLia:DEMO:ENABLE","type":[4,4],"params":[1,1]},
+{"name":"demo_ref_mode_ch2","scpiCmd":":ZWLia:DEMO:REF:MODE","type":[4,4],"params":[2,0]},
+{"name":"demo_osc_number_ch2","scpiCmd":":ZWLia:DEMO:OSC:NUMBER","type":[4,4],"params":[2,1]},
+{"name":"demo_osc_phase_ch2","scpiCmd":":ZWLia:DEMO:OSC:PHASE","type":[4,4],"params":[2,0]},
+{"name":"demo_osc_harm_ch2","scpiCmd":":ZWLia:DEMO:OSC:HARM","type":[4,4],"params":[2,1]},
+{"name":"demo_osc_mode_ch2_out1","scpiCmd":":ZWLia:DEMO:OSC:MODE","type":[4,4,4],"params":[2,1,0]},
+{"name":"demo_osc_duty_ch2_out1","scpiCmd":":ZWLia:DEMO:OSC:PULSE:DUTY","type":[4,4,4],"params":[2,1,50]},
+{"name":"demo_osc_amp_ch2_out1","scpiCmd":":ZWLia:DEMO:OSC:AMP","type":[4,4,4],"params":[2,1,1]},
+{"name":"demo_osc_amp_en_ch2_out1","scpiCmd":":ZWLia:DEMO:OSC:AMP:ENABLE","type":[4,4,4],"params":[2,1,0]},
+{"name":"demo_osc_mode_ch2_out2","scpiCmd":":ZWLia:DEMO:OSC:MODE","type":[4,4,4],"params":[2,2,0]},
+{"name":"demo_osc_duty_ch2_out2","scpiCmd":":ZWLia:DEMO:OSC:PULSE:DUTY","type":[4,4,4],"params":[2,2,50]},
+{"name":"demo_osc_amp_ch2_out2","scpiCmd":":ZWLia:DEMO:OSC:AMP","type":[4,4,4],"params":[2,2,1]},
+{"name":"demo_osc_amp_en_ch2_out2","scpiCmd":":ZWLia:DEMO:OSC:AMP:ENABLE","type":[4,4,4],"params":[2,2,0]},
+{"name":"demo_ref_source_ch2","scpiCmd":":ZWLia:DEMO:REF:SOURce","type":[4,4],"params":[2,0]},
+{"name":"demo_source_ch2","scpiCmd":":ZWLia:DEMO:DATA:SOURce","type":[4,4],"params":[2,0]},
+{"name":"demo_fir_order_ch2","scpiCmd":":ZWLia:DEMO:FIR:ORDER","type":[4,4],"params":[2,3]},
+{"name":"demo_fir_tc_ch2","scpiCmd":":ZWLia:DEMO:FIR:TC","type":[4,4],"params":[2,0.2]},
+{"name":"demo_sinc_state_ch2","scpiCmd":":ZWLia:DEMO:SINC:ENABLE","type":[4,4],"params":[2,0]},
+{"name":"demo_scale_ch2","scpiCmd":":ZWLia:DEMO:SCALE","type":[4,4],"params":[2,1]},
+{"name":"demo_state_ch2","scpiCmd":":ZWLia:DEMO:ENABLE","type":[4,4],"params":[2,1]},
+{"name":"demo_ref_mode_ch3","scpiCmd":":ZWLia:DEMO:REF:MODE","type":[4,4],"params":[3,0]},
+{"name":"demo_osc_number_ch3","scpiCmd":":ZWLia:DEMO:OSC:NUMBER","type":[4,4],"params":[3,2]},
+{"name":"demo_osc_phase_ch3","scpiCmd":":ZWLia:DEMO:OSC:PHASE","type":[4,4],"params":[3,0]},
+{"name":"demo_osc_harm_ch3","scpiCmd":":ZWLia:DEMO:OSC:HARM","type":[4,4],"params":[3,1]},
+{"name":"demo_osc_mode_ch3_out1","scpiCmd":":ZWLia:DEMO:OSC:MODE","type":[4,4,4],"params":[3,1,0]},
+{"name":"demo_osc_duty_ch3_out1","scpiCmd":":ZWLia:DEMO:OSC:PULSE:DUTY","type":[4,4,4],"params":[3,1,50]},
+{"name":"demo_osc_amp_ch3_out1","scpiCmd":":ZWLia:DEMO:OSC:AMP","type":[4,4,4],"params":[3,1,1]},
+{"name":"demo_osc_amp_en_ch3_out1","scpiCmd":":ZWLia:DEMO:OSC:AMP:ENABLE","type":[4,4,4],"params":[3,1,0]},
+{"name":"demo_osc_mode_ch3_out2","scpiCmd":":ZWLia:DEMO:OSC:MODE","type":[4,4,4],"params":[3,2,0]},
+{"name":"demo_osc_duty_ch3_out2","scpiCmd":":ZWLia:DEMO:OSC:PULSE:DUTY","type":[4,4,4],"params":[3,2,50]},
+{"name":"demo_osc_amp_ch3_out2","scpiCmd":":ZWLia:DEMO:OSC:AMP","type":[4,4,4],"params":[3,2,1]},
+{"name":"demo_osc_amp_en_ch3_out2","scpiCmd":":ZWLia:DEMO:OSC:AMP:ENABLE","type":[4,4,4],"params":[3,2,0]},
+{"name":"demo_ref_source_ch3","scpiCmd":":ZWLia:DEMO:REF:SOURce","type":[4,4],"params":[3,0]},
+{"name":"demo_source_ch3","scpiCmd":":ZWLia:DEMO:DATA:SOURce","type":[4,4],"params":[3,0]},
+{"name":"demo_fir_order_ch3","scpiCmd":":ZWLia:DEMO:FIR:ORDER","type":[4,4],"params":[3,3]},
+{"name":"demo_fir_tc_ch3","scpiCmd":":ZWLia:DEMO:FIR:TC","type":[4,4],"params":[3,0.2]},
+{"name":"demo_sinc_state_ch3","scpiCmd":":ZWLia:DEMO:SINC:ENABLE","type":[4,4],"params":[3,0]},
+{"name":"demo_scale_ch3","scpiCmd":":ZWLia:DEMO:SCALE","type":[4,4],"params":[3,1]},
+{"name":"demo_state_ch3","scpiCmd":":ZWLia:DEMO:ENABLE","type":[4,4],"params":[3,1]},
+{"name":"demo_ref_mode_ch4","scpiCmd":":ZWLia:DEMO:REF:MODE","type":[4,4],"params":[4,0]},
+{"name":"demo_osc_number_ch4","scpiCmd":":ZWLia:DEMO:OSC:NUMBER","type":[4,4],"params":[4,3]},
+{"name":"demo_osc_phase_ch4","scpiCmd":":ZWLia:DEMO:OSC:PHASE","type":[4,4],"params":[4,0]},
+{"name":"demo_osc_harm_ch4","scpiCmd":":ZWLia:DEMO:OSC:HARM","type":[4,4],"params":[4,1]},
+{"name":"demo_osc_mode_ch4_out1","scpiCmd":":ZWLia:DEMO:OSC:MODE","type":[4,4,4],"params":[4,1,0]},
+{"name":"demo_osc_duty_ch4_out1","scpiCmd":":ZWLia:DEMO:OSC:PULSE:DUTY","type":[4,4,4],"params":[4,1,50]},
+{"name":"demo_osc_amp_ch4_out1","scpiCmd":":ZWLia:DEMO:OSC:AMP","type":[4,4,4],"params":[4,1,1]},
+{"name":"demo_osc_amp_en_ch4_out1","scpiCmd":":ZWLia:DEMO:OSC:AMP:ENABLE","type":[4,4,4],"params":[4,1,0]},
+{"name":"demo_osc_mode_ch4_out2","scpiCmd":":ZWLia:DEMO:OSC:MODE","type":[4,4,4],"params":[4,2,0]},
+{"name":"demo_osc_duty_ch4_out2","scpiCmd":":ZWLia:DEMO:OSC:PULSE:DUTY","type":[4,4,4],"params":[4,2,50]},
+{"name":"demo_osc_amp_ch4_out2","scpiCmd":":ZWLia:DEMO:OSC:AMP","type":[4,4,4],"params":[4,2,1]},
+{"name":"demo_osc_amp_en_ch4_out2","scpiCmd":":ZWLia:DEMO:OSC:AMP:ENABLE","type":[4,4,4],"params":[4,2,0]},
+{"name":"demo_ref_source_ch4","scpiCmd":":ZWLia:DEMO:REF:SOURce","type":[4,4],"params":[4,0]},
+{"name":"demo_source_ch4","scpiCmd":":ZWLia:DEMO:DATA:SOURce","type":[4,4],"params":[4,0]},
+{"name":"demo_fir_order_ch4","scpiCmd":":ZWLia:DEMO:FIR:ORDER","type":[4,4],"params":[4,3]},
+{"name":"demo_fir_tc_ch4","scpiCmd":":ZWLia:DEMO:FIR:TC","type":[4,4],"params":[4,0.2]},
+{"name":"demo_sinc_state_ch4","scpiCmd":":ZWLia:DEMO:SINC:ENABLE","type":[4,4],"params":[4,0]},
+{"name":"demo_scale_ch4","scpiCmd":":ZWLia:DEMO:SCALE","type":[4,4],"params":[4,1]},
+{"name":"demo_state_ch4","scpiCmd":":ZWLia:DEMO:ENABLE","type":[4,4],"params":[4,1]},
+{"name":"demo_ref_mode_ch5","scpiCmd":":ZWLia:DEMO:REF:MODE","type":[4,4],"params":[5,0]},
+{"name":"demo_osc_number_ch5","scpiCmd":":ZWLia:DEMO:OSC:NUMBER","type":[4,4],"params":[5,4]},
+{"name":"demo_osc_phase_ch5","scpiCmd":":ZWLia:DEMO:OSC:PHASE","type":[4,4],"params":[5,0]},
+{"name":"demo_osc_harm_ch5","scpiCmd":":ZWLia:DEMO:OSC:HARM","type":[4,4],"params":[5,1]},
+{"name":"demo_osc_mode_ch5_out1","scpiCmd":":ZWLia:DEMO:OSC:MODE","type":[4,4,4],"params":[5,1,0]},
+{"name":"demo_osc_duty_ch5_out1","scpiCmd":":ZWLia:DEMO:OSC:PULSE:DUTY","type":[4,4,4],"params":[5,1,50]},
+{"name":"demo_osc_amp_ch5_out1","scpiCmd":":ZWLia:DEMO:OSC:AMP","type":[4,4,4],"params":[5,1,1]},
+{"name":"demo_osc_amp_en_ch5_out1","scpiCmd":":ZWLia:DEMO:OSC:AMP:ENABLE","type":[4,4,4],"params":[5,1,0]},
+{"name":"demo_osc_mode_ch5_out2","scpiCmd":":ZWLia:DEMO:OSC:MODE","type":[4,4,4],"params":[5,2,0]},
+{"name":"demo_osc_duty_ch5_out2","scpiCmd":":ZWLia:DEMO:OSC:PULSE:DUTY","type":[4,4,4],"params":[5,2,50]},
+{"name":"demo_osc_amp_ch5_out2","scpiCmd":":ZWLia:DEMO:OSC:AMP","type":[4,4,4],"params":[5,2,1]},
+{"name":"demo_osc_amp_en_ch5_out2","scpiCmd":":ZWLia:DEMO:OSC:AMP:ENABLE","type":[4,4,4],"params":[5,2,0]},
+{"name":"demo_ref_source_ch5","scpiCmd":":ZWLia:DEMO:REF:SOURce","type":[4,4],"params":[5,0]},
+{"name":"demo_source_ch5","scpiCmd":":ZWLia:DEMO:DATA:SOURce","type":[4,4],"params":[5,0]},
+{"name":"demo_fir_order_ch5","scpiCmd":":ZWLia:DEMO:FIR:ORDER","type":[4,4],"params":[5,3]},
+{"name":"demo_fir_tc_ch5","scpiCmd":":ZWLia:DEMO:FIR:TC","type":[4,4],"params":[5,0.2]},
+{"name":"demo_sinc_state_ch5","scpiCmd":":ZWLia:DEMO:SINC:ENABLE","type":[4,4],"params":[5,0]},
+{"name":"demo_scale_ch5","scpiCmd":":ZWLia:DEMO:SCALE","type":[4,4],"params":[5,1]},
+{"name":"demo_state_ch5","scpiCmd":":ZWLia:DEMO:ENABLE","type":[4,4],"params":[5,1]},
+{"name":"demo_ref_mode_ch6","scpiCmd":":ZWLia:DEMO:REF:MODE","type":[4,4],"params":[6,0]},
+{"name":"demo_osc_number_ch6","scpiCmd":":ZWLia:DEMO:OSC:NUMBER","type":[4,4],"params":[6,5]},
+{"name":"demo_osc_phase_ch6","scpiCmd":":ZWLia:DEMO:OSC:PHASE","type":[4,4],"params":[6,0]},
+{"name":"demo_osc_harm_ch6","scpiCmd":":ZWLia:DEMO:OSC:HARM","type":[4,4],"params":[6,1]},
+{"name":"demo_osc_mode_ch6_out1","scpiCmd":":ZWLia:DEMO:OSC:MODE","type":[4,4,4],"params":[6,1,0]},
+{"name":"demo_osc_duty_ch6_out1","scpiCmd":":ZWLia:DEMO:OSC:PULSE:DUTY","type":[4,4,4],"params":[6,1,50]},
+{"name":"demo_osc_amp_ch6_out1","scpiCmd":":ZWLia:DEMO:OSC:AMP","type":[4,4,4],"params":[6,1,1]},
+{"name":"demo_osc_amp_en_ch6_out1","scpiCmd":":ZWLia:DEMO:OSC:AMP:ENABLE","type":[4,4,4],"params":[6,1,0]},
+{"name":"demo_osc_mode_ch6_out2","scpiCmd":":ZWLia:DEMO:OSC:MODE","type":[4,4,4],"params":[6,2,0]},
+{"name":"demo_osc_duty_ch6_out2","scpiCmd":":ZWLia:DEMO:OSC:PULSE:DUTY","type":[4,4,4],"params":[6,2,50]},
+{"name":"demo_osc_amp_ch6_out2","scpiCmd":":ZWLia:DEMO:OSC:AMP","type":[4,4,4],"params":[6,2,1]},
+{"name":"demo_osc_amp_en_ch6_out2","scpiCmd":":ZWLia:DEMO:OSC:AMP:ENABLE","type":[4,4,4],"params":[6,2,0]},
+{"name":"demo_ref_source_ch6","scpiCmd":":ZWLia:DEMO:REF:SOURce","type":[4,4],"params":[6,0]},
+{"name":"demo_source_ch6","scpiCmd":":ZWLia:DEMO:DATA:SOURce","type":[4,4],"params":[6,0]},
+{"name":"demo_fir_order_ch6","scpiCmd":":ZWLia:DEMO:FIR:ORDER","type":[4,4],"params":[6,3]},
+{"name":"demo_fir_tc_ch6","scpiCmd":":ZWLia:DEMO:FIR:TC","type":[4,4],"params":[6,0.2]},
+{"name":"demo_sinc_state_ch6","scpiCmd":":ZWLia:DEMO:SINC:ENABLE","type":[4,4],"params":[6,0]},
+{"name":"demo_scale_ch6","scpiCmd":":ZWLia:DEMO:SCALE","type":[4,4],"params":[6,1]},
+{"name":"demo_state_ch6","scpiCmd":":ZWLia:DEMO:ENABLE","type":[4,4],"params":[6,1]},
+{"name":"demo_ref_mode_ch7","scpiCmd":":ZWLia:DEMO:REF:MODE","type":[4,4],"params":[7,0]},
+{"name":"demo_osc_number_ch7","scpiCmd":":ZWLia:DEMO:OSC:NUMBER","type":[4,4],"params":[7,6]},
+{"name":"demo_osc_phase_ch7","scpiCmd":":ZWLia:DEMO:OSC:PHASE","type":[4,4],"params":[7,0]},
+{"name":"demo_osc_harm_ch7","scpiCmd":":ZWLia:DEMO:OSC:HARM","type":[4,4],"params":[7,1]},
+{"name":"demo_osc_mode_ch7_out1","scpiCmd":":ZWLia:DEMO:OSC:MODE","type":[4,4,4],"params":[7,1,0]},
+{"name":"demo_osc_duty_ch7_out1","scpiCmd":":ZWLia:DEMO:OSC:PULSE:DUTY","type":[4,4,4],"params":[7,1,50]},
+{"name":"demo_osc_amp_ch7_out1","scpiCmd":":ZWLia:DEMO:OSC:AMP","type":[4,4,4],"params":[7,1,1]},
+{"name":"demo_osc_amp_en_ch7_out1","scpiCmd":":ZWLia:DEMO:OSC:AMP:ENABLE","type":[4,4,4],"params":[7,1,0]},
+{"name":"demo_osc_mode_ch7_out2","scpiCmd":":ZWLia:DEMO:OSC:MODE","type":[4,4,4],"params":[7,2,0]},
+{"name":"demo_osc_duty_ch7_out2","scpiCmd":":ZWLia:DEMO:OSC:PULSE:DUTY","type":[4,4,4],"params":[7,2,50]},
+{"name":"demo_osc_amp_ch7_out2","scpiCmd":":ZWLia:DEMO:OSC:AMP","type":[4,4,4],"params":[7,2,1]},
+{"name":"demo_osc_amp_en_ch7_out2","scpiCmd":":ZWLia:DEMO:OSC:AMP:ENABLE","type":[4,4,4],"params":[7,2,0]},
+{"name":"demo_ref_source_ch7","scpiCmd":":ZWLia:DEMO:REF:SOURce","type":[4,4],"params":[7,0]},
+{"name":"demo_source_ch7","scpiCmd":":ZWLia:DEMO:DATA:SOURce","type":[4,4],"params":[7,0]},
+{"name":"demo_fir_order_ch7","scpiCmd":":ZWLia:DEMO:FIR:ORDER","type":[4,4],"params":[7,3]},
+{"name":"demo_fir_tc_ch7","scpiCmd":":ZWLia:DEMO:FIR:TC","type":[4,4],"params":[7,0.2]},
+{"name":"demo_sinc_state_ch7","scpiCmd":":ZWLia:DEMO:SINC:ENABLE","type":[4,4],"params":[7,0]},
+{"name":"demo_scale_ch7","scpiCmd":":ZWLia:DEMO:SCALE","type":[4,4],"params":[7,1]},
+{"name":"demo_state_ch7","scpiCmd":":ZWLia:DEMO:ENABLE","type":[4,4],"params":[7,1]},
+{"name":"demo_ref_mode_ch8","scpiCmd":":ZWLia:DEMO:REF:MODE","type":[4,4],"params":[8,0]},
+{"name":"demo_osc_number_ch8","scpiCmd":":ZWLia:DEMO:OSC:NUMBER","type":[4,4],"params":[8,7]},
+{"name":"demo_osc_phase_ch8","scpiCmd":":ZWLia:DEMO:OSC:PHASE","type":[4,4],"params":[8,0]},
+{"name":"demo_osc_harm_ch8","scpiCmd":":ZWLia:DEMO:OSC:HARM","type":[4,4],"params":[8,1]},
+{"name":"demo_osc_mode_ch8_out1","scpiCmd":":ZWLia:DEMO:OSC:MODE","type":[4,4,4],"params":[8,1,0]},
+{"name":"demo_osc_duty_ch8_out1","scpiCmd":":ZWLia:DEMO:OSC:PULSE:DUTY","type":[4,4,4],"params":[8,1,50]},
+{"name":"demo_osc_amp_ch8_out1","scpiCmd":":ZWLia:DEMO:OSC:AMP","type":[4,4,4],"params":[8,1,1]},
+{"name":"demo_osc_amp_en_ch8_out1","scpiCmd":":ZWLia:DEMO:OSC:AMP:ENABLE","type":[4,4,4],"params":[8,1,0]},
+{"name":"demo_osc_mode_ch8_out2","scpiCmd":":ZWLia:DEMO:OSC:MODE","type":[4,4,4],"params":[8,2,0]},
+{"name":"demo_osc_duty_ch8_out2","scpiCmd":":ZWLia:DEMO:OSC:PULSE:DUTY","type":[4,4,4],"params":[8,2,50]},
+{"name":"demo_osc_amp_ch8_out2","scpiCmd":":ZWLia:DEMO:OSC:AMP","type":[4,4,4],"params":[8,2,1]},
+{"name":"demo_osc_amp_en_ch8_out2","scpiCmd":":ZWLia:DEMO:OSC:AMP:ENABLE","type":[4,4,4],"params":[8,2,0]},
+{"name":"demo_ref_source_ch8","scpiCmd":":ZWLia:DEMO:REF:SOURce","type":[4,4],"params":[8,0]},
+{"name":"demo_source_ch8","scpiCmd":":ZWLia:DEMO:DATA:SOURce","type":[4,4],"params":[8,0]},
+{"name":"demo_fir_order_ch8","scpiCmd":":ZWLia:DEMO:FIR:ORDER","type":[4,4],"params":[8,3]},
+{"name":"demo_fir_tc_ch8","scpiCmd":":ZWLia:DEMO:FIR:TC","type":[4,4],"params":[8,0.2]},
+{"name":"demo_sinc_state_ch8","scpiCmd":":ZWLia:DEMO:SINC:ENABLE","type":[4,4],"params":[8,0]},
+{"name":"demo_scale_ch8","scpiCmd":":ZWLia:DEMO:SCALE","type":[4,4],"params":[8,1]},
+{"name":"demo_state_ch8","scpiCmd":":ZWLia:DEMO:ENABLE","type":[4,4],"params":[8,1]},
+{"name":"daq_sample_rate","scpiCmd":":ZWLia:DAQ:DATA:SR","type":[0],"params":[2]},
+{"name":"daq_source","scpiCmd":":ZWLia:DAQ:DATA:SOURCE","type":[3],"params":["0"]},
+{"name":"daq_run","scpiCmd":":ZWLia:DAQ:RUN:ENABLE","type":[0],"params":[0]},
+{"name":"daq_signal","scpiCmd":":ZWLia:DAQ:SIGNAL:ENABLE","type":[0],"params":[0]},
+{"name":"scope_sample_ch1","scpiCmd":":ZWLia:SCOPE:DATA:SR","type":[0,0],"params":[1,0]},
+{"name":"scope_sample_ch2","scpiCmd":":ZWLia:SCOPE:DATA:SR","type":[0,0],"params":[2,0]},
+{"name":"scope_source_ch1","scpiCmd":":ZWLia:SCOPE:DATA:SOURCE","type":[0,0],"params":[1,0]},
+{"name":"scope_source_ch2","scpiCmd":":ZWLia:SCOPE:DATA:SOURCE","type":[0,0],"params":[2,0]},
+{"name":"scope_ch_switch_ch1","scpiCmd":":ZWLia:SCOPE:CH:SWITCH","type":[0,0],"params":[1,0]},
+{"name":"scope_ch_switch_ch2","scpiCmd":":ZWLia:SCOPE:CH:SWITCH","type":[0,0],"params":[2,0]},
+{"name":"scope_average_en","scpiCmd":":ZWLia:SCOPE:AVERAGE:ENABLE","type":[0],"params":[0]},
+{"name":"scope_run","scpiCmd":":ZWLia:SCOPE:RUN:ENABLE","type":[0],"params":[0]},
+{"name":"scope_signal","scpiCmd":":ZWLia:SCOPE:SIGNAL:ENABLE","type":[0],"params":[0]},
+{"name":"pwa_signal","scpiCmd":":ZWLia:PWA:SIGNAL:ENABLE","type":[0],"params":[0]},
+{"name":"trig_smplen","scpiCmd":":ZWLia:TRIG:SMPLEN","type":[0],"params":[4096]},
+{"name":"trig_holdoff_count","scpiCmd":":ZWLia:TRIG:HOLDOFF:COUNT","type":[0],"params":[1]},
+{"name":"trig_source","scpiCmd":":ZWLia:TRIG:SOURce","type":[0],"params":[10]},
+{"name":"trig_mode","scpiCmd":":ZWLia:TRIG:MODE","type":[4],"params":[1]},
+{"name":"trig_type","scpiCmd":":ZWLia:TRIG:TYPE","type":[0],"params":[0]},
+{"name":"trig_level","scpiCmd":":ZWLia:TRIG:LEVEL","type":[4],"params":[2.0]},
+{"name":"trig_hysteresis","scpiCmd":":ZWLia:TRIG:HYSteresis","type":[4],"params":[0.1]},
+{"name":"trig_holdoff_time","scpiCmd":":ZWLia:TRIG:HOLDOFF:TIME","type":[4],"params":[0.1]},
+{"name":"trig_delay","scpiCmd":":ZWLia:TRIG:DELAY","type":[4],"params":[0.000001]},
+{"name":"trig_pluse_width","scpiCmd":":ZWLia:TRIG:PLUSE:WIDTH","type":[0],"params":[0]},
+{"name":"ao_upper_ch1","scpiCmd":":ZWLia:AUXOUT:UPPER","type":[0,4],"params":[1,10]},
+{"name":"ao_upper_ch2","scpiCmd":":ZWLia:AUXOUT:UPPER","type":[0,4],"params":[2,10]},
+{"name":"ao_lower_ch1","scpiCmd":":ZWLia:AUXOUT:LOWER","type":[0,4],"params":[1,-10]},
+{"name":"ao_lower_ch2","scpiCmd":":ZWLia:AUXOUT:LOWER","type":[0,4],"params":[2,-10]},
+{"name":"ao_source_ch1","scpiCmd":":ZWLia:AUXOUT:SOURce","type":[0,0],"params":[1,0]},
+{"name":"ao_dec_ch1","scpiCmd":":ZWLia:AUXOUT:DEC","type":[0,0],"params":[1,1]},
+{"name":"ao_scale_ch1","scpiCmd":":ZWLia:AUXOUT:SCALE","type":[0,4],"params":[1,1]},
+{"name":"ao_offset_ch1","scpiCmd":":ZWLia:AUXOUT:OFFSET","type":[0,4],"params":[1,0]},
+{"name":"ao_state_ch1","scpiCmd":":ZWLia:AUXOUT:ENABLE","type":[0,0],"params":[1,0]},
+{"name":"ao_dcvalue_ch1","scpiCmd":":ZWLia:AUXOUT:DCVOL","type":[0,4],"params":[1,1]},
+{"name":"ao_dcswitch_ch1","scpiCmd":":ZWLia:AUXOUT:DCVOL:ENABLE","type":[0,0],"params":[1,0]},
+{"name":"ao_source_ch2","scpiCmd":":ZWLia:AUXOUT:SOURce","type":[0,0],"params":[2,0]},
+{"name":"ao_dec_ch2","scpiCmd":":ZWLia:AUXOUT:DEC","type":[0,0],"params":[2,1]},
+{"name":"ao_scale_ch2","scpiCmd":":ZWLia:AUXOUT:SCALE","type":[0,4],"params":[2,1]},
+{"name":"ao_offset_ch2","scpiCmd":":ZWLia:AUXOUT:OFFSET","type":[0,4],"params":[2,0]},
+{"name":"ao_state_ch2","scpiCmd":":ZWLia:AUXOUT:ENABLE","type":[0,0],"params":[2,0]},
+{"name":"ao_dcvalue_ch2","scpiCmd":":ZWLia:AUXOUT:DCVOL","type":[0,4],"params":[2,1]},
+{"name":"ao_dcswitch_ch2","scpiCmd":":ZWLia:AUXOUT:DCVOL:ENABLE","type":[0,0],"params":[2,0]},
+{"name":"ao_dcvalue_ch3","scpiCmd":":ZWLia:AUXOUT:DCVOL","type":[0,4],"params":[3,1]},
+{"name":"ao_dcswitch_ch3","scpiCmd":":ZWLia:AUXOUT:DCVOL:ENABLE","type":[0,0],"params":[3,0]},
+{"name":"ao_dcvalue_ch4","scpiCmd":":ZWLia:AUXOUT:DCVOL","type":[0,4],"params":[4,1]},
+{"name":"ao_dcswitch_ch4","scpiCmd":":ZWLia:AUXOUT:DCVOL:ENABLE","type":[0,0],"params":[4,0]},
+{"name":"ai_impedance_ch1","scpiCmd":":ZWLia:AUXINPUT:IMPedance","type":[0,0],"params":[1,0]},
+{"name":"ai_impedance_ch2","scpiCmd":":ZWLia:AUXINPUT:IMPedance","type":[0,0],"params":[2,0]},
+{"name":"ai_impedance_ch3","scpiCmd":":ZWLia:AUXINPUT:IMPedance","type":[0,0],"params":[3,0]},
+{"name":"ai_impedance_ch4","scpiCmd":":ZWLia:AUXINPUT:IMPedance","type":[0,0],"params":[4,0]},
+{"name":"pid_p_ch1","scpiCmd":":ZWLia:PID:P","type":[0,4],"params":[1,0]},
+{"name":"pid_i_ch1","scpiCmd":":ZWLia:PID:I","type":[0,4],"params":[1,0]},
+{"name":"pid_d_ch1","scpiCmd":":ZWLia:PID:D","type":[0,4],"params":[1,0]},
+{"name":"pid_ki_en_ch1","scpiCmd":":ZWLia:PID:KI:ENABLE","type":[0,4],"params":[1,0]},
+{"name":"pid_filter_ch1","scpiCmd":":ZWLia:PID:FILTER","type":[0,4],"params":[1,0]},
+{"name":"pid_source_ch1","scpiCmd":":ZWLia:PID:SOURCE","type":[0,4],"params":[1,10]},
+{"name":"pid_setpoint_ch1","scpiCmd":":ZWLia:PID:SETPOINT","type":[0,4],"params":[1,0]},
+{"name":"pid_dec_ch1","scpiCmd":":ZWLia:PID:DEC","type":[0,4],"params":[1,1]},
+{"name":"pid_invert_ch1","scpiCmd":":ZWLia:PID:INVERT","type":[0,4],"params":[1,0]},
+{"name":"pid_enable_ch1","scpiCmd":":ZWLia:PID:ENABLE","type":[0,4],"params":[1,0]},
+{"name":"pid_p_ch2","scpiCmd":":ZWLia:PID:P","type":[0,4],"params":[2,0]},
+{"name":"pid_i_ch2","scpiCmd":":ZWLia:PID:I","type":[0,4],"params":[2,0]},
+{"name":"pid_d_ch2","scpiCmd":":ZWLia:PID:D","type":[0,4],"params":[2,0]},
+{"name":"pid_ki_en_ch2","scpiCmd":":ZWLia:PID:KI:ENABLE","type":[0,4],"params":[2,0]},
+{"name":"pid_filter_ch2","scpiCmd":":ZWLia:PID:FILTER","type":[0,4],"params":[2,0]},
+{"name":"pid_source_ch2","scpiCmd":":ZWLia:PID:SOURCE","type":[0,4],"params":[2,10]},
+{"name":"pid_setpoint_ch2","scpiCmd":":ZWLia:PID:SETPOINT","type":[0,4],"params":[2,0]},
+{"name":"pid_dec_ch2","scpiCmd":":ZWLia:PID:DEC","type":[0,4],"params":[2,1]},
+{"name":"pid_invert_ch2","scpiCmd":":ZWLia:PID:INVERT","type":[0,4],"params":[2,0]},
+{"name":"pid_enable_ch2","scpiCmd":":ZWLia:PID:ENABLE","type":[0,4],"params":[2,0]},
+{"name":"pid_p_ch3","scpiCmd":":ZWLia:PID:P","type":[0,4],"params":[3,0]},
+{"name":"pid_i_ch3","scpiCmd":":ZWLia:PID:I","type":[0,4],"params":[3,0]},
+{"name":"pid_d_ch3","scpiCmd":":ZWLia:PID:D","type":[0,4],"params":[3,0]},
+{"name":"pid_ki_en_ch3","scpiCmd":":ZWLia:PID:KI:ENABLE","type":[0,4],"params":[3,0]},
+{"name":"pid_filter_ch3","scpiCmd":":ZWLia:PID:FILTER","type":[0,4],"params":[3,0]},
+{"name":"pid_source_ch3","scpiCmd":":ZWLia:PID:SOURCE","type":[0,4],"params":[3,10]},
+{"name":"pid_setpoint_ch3","scpiCmd":":ZWLia:PID:SETPOINT","type":[0,4],"params":[3,0]},
+{"name":"pid_dec_ch3","scpiCmd":":ZWLia:PID:DEC","type":[0,4],"params":[3,1]},
+{"name":"pid_invert_ch3","scpiCmd":":ZWLia:PID:INVERT","type":[0,4],"params":[3,0]},
+{"name":"pid_enable_ch3","scpiCmd":":ZWLia:PID:ENABLE","type":[0,4],"params":[3,0]},
+{"name":"pid_p_ch4","scpiCmd":":ZWLia:PID:P","type":[0,4],"params":[4,0]},
+{"name":"pid_i_ch4","scpiCmd":":ZWLia:PID:I","type":[0,4],"params":[4,0]},
+{"name":"pid_d_ch4","scpiCmd":":ZWLia:PID:D","type":[0,4],"params":[4,0]},
+{"name":"pid_ki_en_ch4","scpiCmd":":ZWLia:PID:KI:ENABLE","type":[0,4],"params":[4,0]},
+{"name":"pid_filter_ch4","scpiCmd":":ZWLia:PID:FILTER","type":[0,4],"params":[4,0]},
+{"name":"pid_source_ch4","scpiCmd":":ZWLia:PID:SOURCE","type":[0,4],"params":[4,10]},
+{"name":"pid_setpoint_ch4","scpiCmd":":ZWLia:PID:SETPOINT","type":[0,4],"params":[4,0]},
+{"name":"pid_dec_ch4","scpiCmd":":ZWLia:PID:DEC","type":[0,4],"params":[4,1]},
+{"name":"pid_invert_ch4","scpiCmd":":ZWLia:PID:INVERT","type":[0,4],"params":[4,0]},
+{"name":"pid_enable_ch4","scpiCmd":":ZWLia:PID:ENABLE","type":[0,4],"params":[4,0]},
+{"name":"sweep_param","scpiCmd":":ZWLia:SWEEP:PARAM","type":[4],"params":[0]},
+{"name":"sweep_start","scpiCmd":":ZWLia:SWEEP:START","type":[4],"params":[0]},
+{"name":"sweep_stop","scpiCmd":":ZWLia:SWEEP:STOP","type":[4],"params":[0]},
+{"name":"sweep_points","scpiCmd":":ZWLia:SWEEP:POINTS","type":[4],"params":[0]},
+{"name":"sweep_mode","scpiCmd":":ZWLia:SWEEP:MODE","type":[4],"params":[0]},
+{"name":"sweep_appmode","scpiCmd":":ZWLia:SWEEP:APPMODE","type":[4],"params":[0]},
+{"name":"sweep_precision","scpiCmd":":ZWLia:SWEEP:PRECISION","type":[4],"params":[0]},
+{"name":"sweep_single","scpiCmd":":ZWLia:SWEEP:SINGLE:ENABLE","type":[4],"params":[0]},
+{"name":"sweep_run","scpiCmd":":ZWLia:SWEEP:RUN:ENABLE","type":[4],"params":[0]},
+{"name":"pcnt_en_ch1","scpiCmd":":ZWLia:PCNT:ENABLE","type":[0,4],"params":[1,0]},
+{"name":"pcnt_mode_ch1","scpiCmd":":ZWLia:PCNT:MODE","type":[0,4],"params":[1,0]},
+{"name":"pcnt_period_ch1","scpiCmd":":ZWLia:PCNT:PERIOD","type":[0,4],"params":[1,0]},
+{"name":"pcnt_input_ch1","scpiCmd":":ZWLia:PCNT:INPUT","type":[0,4],"params":[1,0]},
+{"name":"pcnt_edge_ch1","scpiCmd":":ZWLia:PCNT:EDGE","type":[0,4],"params":[1,0]},
+{"name":"pcnt_en_ch2","scpiCmd":":ZWLia:PCNT:ENABLE","type":[0,4],"params":[2,0]},
+{"name":"pcnt_mode_ch2","scpiCmd":":ZWLia:PCNT:MODE","type":[0,4],"params":[2,0]},
+{"name":"pcnt_period_ch2","scpiCmd":":ZWLia:PCNT:PERIOD","type":[0,4],"params":[2,0]},
+{"name":"pcnt_input_ch2","scpiCmd":":ZWLia:PCNT:INPUT","type":[0,4],"params":[2,0]},
+{"name":"pcnt_edge_ch2","scpiCmd":":ZWLia:PCNT:EDGE","type":[0,4],"params":[2,0]},
+{"name":"pcnt_en_ch3","scpiCmd":":ZWLia:PCNT:ENABLE","type":[0,4],"params":[3,0]},
+{"name":"pcnt_mode_ch3","scpiCmd":":ZWLia:PCNT:MODE","type":[0,4],"params":[3,0]},
+{"name":"pcnt_period_ch3","scpiCmd":":ZWLia:PCNT:PERIOD","type":[0,4],"params":[3,0]},
+{"name":"pcnt_input_ch3","scpiCmd":":ZWLia:PCNT:INPUT","type":[0,4],"params":[3,0]},
+{"name":"pcnt_edge_ch3","scpiCmd":":ZWLia:PCNT:EDGE","type":[0,4],"params":[3,0]},
+{"name":"pcnt_en_ch4","scpiCmd":":ZWLia:PCNT:ENABLE","type":[0,4],"params":[4,0]},
+{"name":"pcnt_mode_ch4","scpiCmd":":ZWLia:PCNT:MODE","type":[0,4],"params":[4,0]},
+{"name":"pcnt_period_ch4","scpiCmd":":ZWLia:PCNT:PERIOD","type":[0,4],"params":[4,0]},
+{"name":"pcnt_input_ch4","scpiCmd":":ZWLia:PCNT:INPUT","type":[0,4],"params":[4,0]},
+{"name":"pcnt_edge_ch4","scpiCmd":":ZWLia:PCNT:EDGE","type":[0,4],"params":[4,0]},
+{"name":"awg_data_upload","scpiCmd":":ZWLia:AWG:DATA:UPLOAD","type":[0],"params":[1]},
+{"name":"awg_play_en_ch1","scpiCmd":":ZWLia:AWG:PLAY:ENABLE","type":[0,4],"params":[1,0]},
+{"name":"awg_play_mode_ch1","scpiCmd":":ZWLia:AWG:PLAY:MODE","type":[0,4],"params":[1,0]},
+{"name":"awg_play_param_ch1","scpiCmd":":ZWLia:AWG:PLAY:PARAM","type":[0,0,4,4,4],"params":[1,0,0,0,0]},
+{"name":"awg_play_en_ch2","scpiCmd":":ZWLia:AWG:PLAY:ENABLE","type":[0,4],"params":[2,0]},
+{"name":"awg_play_mode_ch2","scpiCmd":":ZWLia:AWG:PLAY:MODE","type":[0,4],"params":[2,0]},
+{"name":"awg_play_param_ch2","scpiCmd":":ZWLia:AWG:PLAY:PARAM","type":[0,0,4,4,4],"params":[2,0,0,0,0]},
+{"name":"amfm_en","scpiCmd":":ZWLia:AMFM:ENABLE","type":[0],"params":[0]},
+{"name":"amfm_mode","scpiCmd":":ZWLia:AMFM:MODE","type":[0],"params":[0]},
+{"name":"amfm_amparam","scpiCmd":":ZWLia:AMFM:AM:PARAM","type":[4,4,4],"params":[0,0,0]},
+{"name":"amfm_fmparam","scpiCmd":":ZWLia:AMFM:FM:PARAM","type":[4,4],"params":[0,0]},
+{"name":"trig_level_ch1","scpiCmd":":ZWLia:VERIFY:TRIG:OFFSET","type":[0,4],"params":[1,0]},
+{"name":"trig_level_ch2","scpiCmd":":ZWLia:VERIFY:TRIG:OFFSET","type":[0,4],"params":[2,0]},
+{"name":"trig_level_ch3","scpiCmd":":ZWLia:VERIFY:TRIG:OFFSET","type":[0,4],"params":[3,0]},
+{"name":"trig_level_ch4","scpiCmd":":ZWLia:VERIFY:TRIG:OFFSET","type":[0,4],"params":[4,0]},
+{"name":"v1_ch1","scpiCmd":":ZWLia:VERIFY:VONE:OFFSET","type":[0,4],"params":[1,0]},
+{"name":"v1_ch2","scpiCmd":":ZWLia:VERIFY:VONE:OFFSET","type":[0,4],"params":[2,0]},
+{"name":"v1_ch3","scpiCmd":":ZWLia:VERIFY:VONE:OFFSET","type":[0,4],"params":[3,0]},
+{"name":"v1_ch4","scpiCmd":":ZWLia:VERIFY:VONE:OFFSET","type":[0,4],"params":[4,0]},
+{"name":"v2_ch1","scpiCmd":":ZWLia:VERIFY:VTWO:OFFSET","type":[0,4],"params":[1,0]},
+{"name":"v2_ch2","scpiCmd":":ZWLia:VERIFY:VTWO:OFFSET","type":[0,4],"params":[2,0]},
+{"name":"v2_ch3","scpiCmd":":ZWLia:VERIFY:VTWO:OFFSET","type":[0,4],"params":[3,0]},
+{"name":"v2_ch4","scpiCmd":":ZWLia:VERIFY:VTWO:OFFSET","type":[0,4],"params":[4,0]},
+{"name":"so_ch1","scpiCmd":":ZWLia:VERIFY:SO:OFFSET","type":[0,4],"params":[1,0]},
+{"name":"so_ch2","scpiCmd":":ZWLia:VERIFY:SO:OFFSET","type":[0,4],"params":[2,0]},
+{"name":"so_ch3","scpiCmd":":ZWLia:VERIFY:SO:OFFSET","type":[0,4],"params":[3,0]},
+{"name":"so_ch4","scpiCmd":":ZWLia:VERIFY:SO:OFFSET","type":[0,4],"params":[4,0]},
+{"name":"verify_si_switch_ch1","scpiCmd":":ZWLia:VERIFY:SI:SWITCH","type":[0,0],"params":[1,0]},
+{"name":"verify_si_switch_ch2","scpiCmd":":ZWLia:VERIFY:SI:SWITCH","type":[0,0],"params":[2,0]}
 ]

@@ -34,50 +34,6 @@ static double signalout_range_voltage(int32_t range)
 	return range_m005m[range];
 }
 
-static uint32_t soft_trig_source_by_model(void)
-{
-	if (get_device_model() == DEVICE_MODEL_L500K) {
-		return TS_L500K_51_SOFTWARE;
-	}
-
-	return TS_M005M_39_SOFTWARE;
-}
-
-static uint32_t trig_source_from_compact_m005m(int32_t param)
-{
-	uint32_t source = (uint32_t)param + TS_M005M_1_VOL;
-
-	if (source == TS_M005M_37_SIGNALOUT1_PHASE) {
-		return TS_M005M_40_TRIGIN1;
-	}
-	if (source == TS_M005M_38_SIGNALOUT2_PHASE) {
-		return TS_M005M_41_TRIGIN2;
-	}
-
-	return source;
-}
-
-static uint32_t trig_source_from_compact_l500k(int32_t param)
-{
-	uint32_t source = (uint32_t)param + TS_L500K_1_VOL;
-
-	if (source >= TS_L500K_49_SIGNALOUT1_PHASE
-		&& source <= TS_L500K_52_TRIGIN1) {
-		return source + 3;
-	}
-
-	return source;
-}
-
-static uint32_t trig_source_from_compact_by_model(int32_t param)
-{
-	if (get_device_model() == DEVICE_MODEL_L500K) {
-		return trig_source_from_compact_l500k(param);
-	}
-
-	return trig_source_from_compact_m005m(param);
-}
-
 void send_soft_trig()
 {
 	ParamValue getpv;
@@ -92,10 +48,7 @@ void send_soft_trig()
     reg_write_by_name("soft_trig", 0);
 
 	get_param_by_name(PARAM_CURRENT, "trig_source", 0, &getpv);
-    trig_source = getpv.value.i32 + 1;
-    if(trig_source == TS_SIGNALOUT1_PHASE) {
-        trig_source = TS_TRIGIN1;
-    }
+    trig_source = getpv.value.i32;
 
 	reg_write_by_name("trig_source", trig_source);
 }
@@ -176,7 +129,7 @@ static void scan_init_from_cfg(void)
 
     // 初始化时切换到软触发源
     /* 源配置成软触发源 */
-    reg_write_by_name("trig_source", soft_trig_source_by_model());
+    reg_write_by_name("trig_source", TS_SOFTWARE);
 }
 
 void output_value(double value)
@@ -203,13 +156,12 @@ void output_value(double value)
 			value = 0.0;
 			setpv.value.d = value;
 		}
-		temp = value * pow(2, 48) / 40000000.0;
+		temp = value * pow(2, 48) / 500000000.0;
 		freq = (uint64_t)temp;
-		reg_write_by_name("signalout1_osc_freq_word_l", (uint32_t)(freq & 0xFFFFFFFF));
-		reg_write_by_name("signalout1_osc_freq_word_h", (uint32_t)((freq >> 32) & 0xFFFFFFFF));
-		set_param_by_name(PARAM_CURRENT,"so_osc_freq_ch1", 1, setpv);
-        reg_write_by_name("osc_work_all", 0);
-        reg_write_by_name("osc_work_all", 1);
+		reg_write_by_name("oscillators2_freq_word_l", (uint32_t)(freq & 0xFFFFFFFF));
+		reg_write_by_name("oscillators2_freq_word_h", (uint32_t)((freq >> 32) & 0xFFFFFFFF));
+		reg_write_by_name("oscillators2_en", 1);
+		set_param_by_name(PARAM_CURRENT,"osc1_freq", 1, setpv);
 		break;
 	case SWEEP_PARAM_SO1_SCALE:
 		if (value < 0.0) {
@@ -224,24 +176,23 @@ void output_value(double value)
 		setpv.value.d = scale;
 		temp = scale * g_so_sineout_verify[range];
 		codevalue = temp * (1ULL << 32);
-		reg_write_by_name("signalout1_scaling2_l", (uint32_t)(codevalue & 0xFFFFFFFF));
-		reg_write_by_name("signalout1_scaling2_h", (uint32_t)((codevalue >> 32) & 0xFFFFFFFF));
-		set_param_by_name(PARAM_CURRENT,"so_signal_scale_ch1", 1, setpv);
+		reg_write_by_name("signalout1_scaling1_l", (uint32_t)(codevalue & 0xFFFFFFFF));
+		reg_write_by_name("signalout1_scaling1_h", (uint32_t)((codevalue >> 32) & 0xFFFFFFFF));
+		reg_write_by_name("signalout1_bigwidth_write_en", 1);
+		reg_write_by_name("signalout1_bigwidth_write_en", 0);
+		set_param_by_name(PARAM_CURRENT,"so_scaling1_ch1", 1, setpv);
 		break;
 	case SWEEP_PARAM_SO2_FREQ:
 		if (value < 0.0) {
 			value = 0.0;
 			setpv.value.d = value;
 		}
-		temp = value * pow(2, 48) / 40000000.0;
+		temp = value * pow(2, 48) / 500000000.0;
 		freq = (uint64_t)temp;
-		reg_write_by_name("signalout2_osc_freq_word_l", (uint32_t)(freq & 0xFFFFFFFF));
-		reg_write_by_name("signalout2_osc_freq_word_h", (uint32_t)((freq >> 32) & 0xFFFFFFFF));
-		set_param_by_name(PARAM_CURRENT,"so_osc_freq_ch2", 1, setpv);
-        
-        //OSC Real Output
-        reg_write_by_name("osc_work_all", 0);
-        reg_write_by_name("osc_work_all", 1);
+		reg_write_by_name("oscillators3_freq_word_l", (uint32_t)(freq & 0xFFFFFFFF));
+		reg_write_by_name("oscillators3_freq_word_h", (uint32_t)((freq >> 32) & 0xFFFFFFFF));
+		reg_write_by_name("oscillators3_en", 1);
+		set_param_by_name(PARAM_CURRENT,"osc2_freq", 1, setpv);
 		break;
 	case SWEEP_PARAM_SO2_SCALE:
 		if (value < 0.0) {
@@ -256,9 +207,11 @@ void output_value(double value)
 		setpv.value.d = scale;
 		temp = scale * g_so_sineout_verify[range];
 		codevalue = temp * (1ULL << 32);
-		reg_write_by_name("signalout2_scaling2_l", (uint32_t)(codevalue & 0xFFFFFFFF));
-		reg_write_by_name("signalout2_scaling2_h", (uint32_t)((codevalue >> 32) & 0xFFFFFFFF));
-		set_param_by_name(PARAM_CURRENT,"so_signal_scale_ch2", 1, setpv);
+		reg_write_by_name("signalout2_scaling1_l", (uint32_t)(codevalue & 0xFFFFFFFF));
+		reg_write_by_name("signalout2_scaling1_h", (uint32_t)((codevalue >> 32) & 0xFFFFFFFF));
+		reg_write_by_name("signalout2_bigwidth_write_en", 1);
+		reg_write_by_name("signalout2_bigwidth_write_en", 0);
+		set_param_by_name(PARAM_CURRENT,"so_scaling1_ch2", 1, setpv);
 		break;
 	default:
 		return;

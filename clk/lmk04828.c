@@ -2,6 +2,7 @@
 #include "../axispi/spi.h"
 #include "../axigpio/gpio.h"
 #include "../log/log.h"
+#include "../utils/scpi-def.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -23,6 +24,7 @@
 #define LMK_GPIO_FIRA           3
 #define LMK_GPIO_FIRB           4
 #define LMK_GPIO_PCA9538_INIT   5
+#define DAC_SYNC                6
 
 /* LMK register configuration:
  *   LMK04828_CLOCK_CONFIG_100M = 0: internal 100 MHz or external 100 MHz reference
@@ -277,6 +279,99 @@ int lmk04828_write_reg(uint16_t addr, uint8_t value)
     return (ret < 0) ? -1 : 0;
 }
 
+static int lmk04828_read_reg(uint16_t addr, uint8_t *value)
+{
+    int ret;
+    uint8_t txbuf[3];
+    uint8_t rxbuf[3] = {0};
+    spi_t *spi = spi_new();
+
+    if (value == NULL) {
+        return -1;
+    }
+    if (spi == NULL) {
+        P_LOG_ERROR("LMK04828 spi_new failed");
+        return -1;
+    }
+
+    if (spi_open(spi, LMK04828_SPI_DEV, LMK04828_SPI_MODE, LMK04828_SPI_SPEED_HZ) < 0) {
+        P_LOG_ERROR("LMK04828 spi_open(%s) failed: %s", LMK04828_SPI_DEV, spi_errmsg(spi));
+        spi_free(spi);
+        return -1;
+    }
+
+    txbuf[0] = (uint8_t)(0x80 | ((addr >> 8) & 0x7F));
+    txbuf[1] = (uint8_t)(addr & 0xFF);
+    txbuf[2] = 0x00;
+
+    ret = spi_transfer(spi, txbuf, rxbuf, sizeof(txbuf));
+    if (ret < 0) {
+        P_LOG_ERROR("LMK04828 read reg failed, addr=0x%04X: %s",
+                    addr, spi_errmsg(spi));
+    } else {
+        *value = rxbuf[2];
+    }
+
+    spi_close(spi);
+    spi_free(spi);
+
+    return (ret < 0) ? -1 : 0;
+}
+
+static int lmk04828_is_locked(void)
+{
+    uint8_t value_182 = 0;
+    uint8_t value_183 = 0;
+    int i;
+    gLobalParam *glp = NULL;
+
+    get_global_param(&glp);
+    if (glp != NULL) {
+        glp->g_dev_lock_state = 0;
+    }
+
+    for (i = 0; i < 20; i++) {
+        value_182 = 0;
+        value_183 = 0;
+        if (lmk04828_read_reg(0x0182, &value_182) != 0) {
+            P_LOG_ERROR("LMK04828 read lock register 0x0182 failed");
+        } else {
+            P_LOG_DEBUG("LMK04828 lock register 0x0182 = 0x%02X", value_182);
+        }
+
+        if (lmk04828_read_reg(0x0183, &value_183) != 0) {
+            P_LOG_ERROR("LMK04828 read lock register 0x0183 failed");
+        } else {
+            P_LOG_DEBUG("LMK04828 lock register 0x0183 = 0x%02X", value_183);
+        }
+
+        if (glp != NULL) {
+            /* Raw diagnostics: bits 7:0 = reg 0x182, bits 15:8 = reg 0x183.
+             * Register bit1 is current lock; bit2 is loss-of-lock history.
+             * Replace diagnostics with 1 when both PLLs are currently locked.
+             */
+            glp->g_dev_lock_state = (uint32_t)value_182 | ((uint32_t)value_183 << 8);
+        }
+
+        if ((value_182 & 0x02) && (value_183 & 0x02)) {
+            if (glp != NULL) {
+                glp->g_dev_lock_state = 1;
+            }
+            P_LOG_DEBUG("LMK04828 clock locked");
+            break;
+        }
+
+        usleep(500000);
+    }
+
+    if (!(value_182 & 0x02) || !(value_183 & 0x02)) {
+        P_LOG_ERROR("LMK04828 clock lock timeout, 0x0182=0x%02X, 0x0183=0x%02X",
+                    value_182, value_183);
+    }
+
+    return 1;
+}
+
 static int lmk04828_write_addr_data(spi_t *spi, uint32_t addr_data)
 {
     uint8_t txbuf[3];
@@ -396,6 +491,8 @@ int lmk04828_init(RefClk ref_clk)
         return -1;
     }
 
+    lmk04828_is_locked();
+
     sleep(3);
 
     /* Notify PL that the clock tree is ready. */
@@ -405,6 +502,8 @@ int lmk04828_init(RefClk ref_clk)
 
     /* Notify PL that PCA9538 related initialization can continue. */
     gpio_set_value(LMK_GPIO_PCA9538_INIT, 1);
+
+    gpio_set_value(DAC_SYNC, 1);
 
     return 0;
 }

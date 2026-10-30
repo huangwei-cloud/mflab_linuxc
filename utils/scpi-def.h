@@ -58,9 +58,13 @@ extern "C" {
 #define CH8 (8)
 
 
-#define INT    (0)
-#define EXT    (1)
-#define DOUBLE (2)
+#define INTTRIG    (0)
+#define EXTTRIG    (1)
+#define EXTIN1 (1)
+#define EXTIN2 (2)
+
+#define OSC_SAMPLE_RATE (1000000000.0) //1GSa/s
+#define PLL_SAMPLE_RATE (500000000.0)  //500MSa/s
 
 typedef struct _SO_RANGE_WAVEFORMAT{
 	uint8_t ch1_range;
@@ -75,6 +79,8 @@ typedef struct _SO_RANGE_WAVEFORMAT{
 
 typedef struct _DEMOD_PARAM {
 	int32_t osc_source;
+	int32_t ref_mode;  // 0:manual, 1:PLL reference, 2:difference
+	int32_t osc_index; // Global OSC0..OSC7 selected by this channel's lookup table
 	double osc_freq;
 	double osc_harm;
 	DemoInputSource source;
@@ -100,7 +106,7 @@ typedef struct _GLOBAL_PARAM {
 	VolRange g_vol_range2;
 	CurRange g_cur_range;
 	int32_t g_daq_source;
-	ScopeDataSource g_scope_source;
+	ScopeDataSource g_scope_source[2]; /* [0]=Scope CH1, [1]=Scope CH2. */
 	SoRangeWaveFormat g_so_range_wave_format;
 	SiVolCtrol g_si_vol_ch1_ctrol;
 	SiVolCtrol g_si_vol_ch2_ctrol;

@@ -56,8 +56,8 @@
 #include "../calib/socalib.h"
 #include "../calib/auxoutcalib_l500k.h"
 #include "../calib/choutcalib_l500k.h"
-#include "../calib/sooutputquant_l500k.h"
-#include "../calib/sooffsetcalib_l500k.h"
+#include "../calib/soscalecalib_mfilab.h"
+#include "../calib/sooffsetcalib_mfllab.h"
 #include "../sweep/sweep.h"
 #include "../awg/awg.h"
 #include "../clk/regctrl.h"
@@ -103,15 +103,15 @@ void get_global_param(gLobalParam ** glp)
 
 void pack_registers(SoRangeWaveFormat *fmt, uint8_t regs[3])
 {
-    // ��1���Ĵ���: CH1 ����[��4λ] + ��Χ[��4λ]
+
     regs[0] = ((fmt->ch1_wave_format & 0x0F) << 4) |
               (fmt->ch1_range & 0x0F);
 
-    // ��2���Ĵ���: CH2 ����[��4λ] + ��Χ[��4λ]
+    
     regs[1] = ((fmt->ch2_wave_format & 0x0F) << 4) |
               (fmt->ch2_range & 0x0F);
 
-    // ��3���Ĵ���: bit[0:1]=CH1_RANGE2, bit[2:3]=CH2_RANGE2
+    //bit[0:1]=CH1_RANGE2, bit[2:3]=CH2_RANGE2
     regs[2] = ((fmt->ch2_range2 & 0x03) << 2) |
               (fmt->ch1_range2 & 0x03);
 
@@ -654,7 +654,7 @@ static scpi_result_t zwdx_set_defaultpre(scpi_t *context)
 	save_system_config(SYSTEM_PATH, psc, 1);
 
 	/*go main thread config default*/
-	//g_restart_config = 1;������BUG, �����豸���²���
+	//g_restart_config = 1;
 
 	return SCPI_RES_OK;
 }
@@ -668,12 +668,12 @@ void start_static_ip(const char *ip, const char *gateway, const char *mac)
 
     if (fp) {
         while (fgets(line, sizeof(line), fp)) {
-            // ���� "address" ��ͷ����
+
             if (strncmp(line, "    address", 11) == 0) {
                 char cur_ip[64];
                 if (sscanf(line, "    address %63s", cur_ip) == 1) {
                     if (strcmp(cur_ip, ip) == 0) {
-                        need_update = 0;   // �Ѿ���Ŀ�� IP
+                        need_update = 0;   
                     }
                 }
                 break;
@@ -682,14 +682,12 @@ void start_static_ip(const char *ip, const char *gateway, const char *mac)
         fclose(fp);
     }
 
-    // д���µ������ļ�
     fp = fopen(config_file, "w");
     if (!fp) {
         perror("fopen");
         return;
     }
 
-    // д�뾲̬ IP ����
     fprintf(fp, "auto eth0\n");
     fprintf(fp, "iface eth0 inet static\n");
     fprintf(fp, "    address %s\n", ip);
@@ -705,10 +703,9 @@ void start_static_ip(const char *ip, const char *gateway, const char *mac)
         return;
     }
 
-    // ����Ӧ���� IP ����
     system("ifdown eth0 && ifup eth0");
 
-    printf("static ip set success��\n");
+    printf("static ip set success\n");
     printf("ip address: %s\n", ip);
     printf("gw: %s\n", gateway);
 }
@@ -721,7 +718,6 @@ int start_dhcp_ip(const char *mac)
 	char line[256];
 	int dhcp_in_file = 0;
 
-	// 1) ��������ļ��Ƿ����?DHCP
 	fp = fopen(config_file, "r");
 	if (fp) {
 		while (fgets(line, sizeof(line), fp)) {
@@ -734,7 +730,6 @@ int start_dhcp_ip(const char *mac)
 		fclose(fp);
 	}
 
-	// 2) ���� DHCP ����д����
 	if (!dhcp_in_file) {
 		fp = fopen(config_file, "w");
 		if (!fp) { perror("open interfaces"); return -1; }
@@ -747,13 +742,10 @@ int start_dhcp_ip(const char *mac)
 		return -1;
 	}
 
-	// 3) ͣ�ɵ� DHCP �ͻ��ˣ�����������
 	system("killall udhcpc 2>/dev/null");
-	system("ifdown eth0 2>/dev/null");	 // ���Դ���
+	system("ifdown eth0 2>/dev/null");
 	system("ifup eth0 2>/dev/null");
 
-	// 4) �ԡ��������ԡ���Ĭģʽ������ udhcpc�����ⳤʱ��������
-	//	  -n: ʧ�������˳�	 -q: ��Ĭ	-T 2: ��ʱ 2 ��   -t 3: ���� 3 ��
 	int ret = system("udhcpc -i eth0 -n -q -T 2 -t 3");
 	if (ret != 0) {
 		fprintf(stderr, "udhcpc failed (ret=%d)\n", ret);
@@ -804,16 +796,16 @@ static scpi_result_t zwdx_set_dhcp_en(scpi_t *context)
 		return SCPI_RES_ERR;
 	}
 	if(isfirst_start) {
-		/*��һ�����У�������Դ��CMDPARAM��ʹ��,ʹ��SYSPARAM�ж�,��ִ���κβ���*/
+
 	}else {
-		psc->dhcpen = param1; //1:enable 0:disable ��λ������
+		psc->dhcpen = param1; //1:enable 0:disable
 	}
 
 	save_system_config(SYSTEM_PATH, psc, 1);
 
 	if(psc->dhcpen) {
 		if(isfirst_start) {
-			start_dhcp_ip(psc->mac); //���ϵ��һ��ִ���? ��λ�����ò�ִ�У���Ҫ�豸�л����ߣ������豸
+			start_dhcp_ip(psc->mac);
 		}
 	} else {
 		start_static_ip(psc->ip, psc->gw, psc->mac);
@@ -826,50 +818,27 @@ static scpi_result_t zwdx_set_dhcp_en(scpi_t *context)
 
 static scpi_result_t zwdx_set_dev_clk_source(scpi_t *context)
 {
-	static bool isfirst = true;
 	int32_t param1;
 	ParamValue pv;
 
 	if (!SCPI_ParamInt32(context, &param1, TRUE)) {
 		return SCPI_RES_ERR;
 	}
-
-	if(isfirst) {
-		isfirst = false;
-	} else {
-		pv.type = PARAM_INT32;
-		pv.value.i32 = param1;
-
-		g_param.g_dev_clk_source = param1;
-		set_param_by_name(PARAM_CURRENT,"dev_clk_source", 0, pv);
-
-		printf("CLK SOURCE : %d\r\n", param1);
-
-	}
-
-	return SCPI_RES_OK;
-}
-
-
-static scpi_result_t zwdx_set_dev_clk_extfreq(scpi_t *context)
-{
-	int32_t param1;
-	ParamValue pv;
-
-	if (!SCPI_ParamInt32(context, &param1, TRUE)) {
+	if(param1 < INTERNAL_100M || param1 > EXTERN_10M) {
 		return SCPI_RES_ERR;
 	}
 
 	pv.type = PARAM_INT32;
 	pv.value.i32 = param1;
 
-	set_param_by_name(PARAM_CURRENT,"dev_extclk_freq", 0, pv);
+	/* Clock switching is handled by clk_thread through g_dev_clk_source:
+		*   0: internal 100 MHz, 1: external 100 MHz, 2: external 10 MHz
+		*/
+	g_param.g_dev_lock_state = 0; //lock state reset
+	g_param.g_dev_clk_source = param1;
+	set_param_by_name(PARAM_CURRENT,"dev_clk_source", 0, pv);
 
-	if(param1 == EXTERN_100M) {
-		dev_clk_switch(EXTERN_100M);
-	}else if(param1 == EXTERN_10M ) {
-		dev_clk_switch(EXTERN_10M);
-	}
+	printf("CLK SOURCE : %d\r\n", param1);
 
 	return SCPI_RES_OK;
 }
@@ -912,50 +881,53 @@ static scpi_result_t zwdx_get_dev_clk_state(scpi_t *context)
 
 static scpi_result_t zwdx_get_ref_freq(scpi_t *context)
 {
-	int32_t param1;
 	uint32_t freq_l, freq_h;
-	double freq;
+	double freq[9];
 	uint64_t freq_code;
+	char reg_l_name[64], reg_h_name[64];
 
-	if (!SCPI_ParamInt32(context, &param1, TRUE)) {
-		return SCPI_RES_ERR;
+	/* Return PLL, OSC0..OSC7, in Hz. Read the system result registers. */
+	for (int i = 0; i < 9; i++) {
+		if (i == 0) {
+			sprintf(reg_l_name, "pll_freq_word_l");
+			sprintf(reg_h_name, "pll_freq_word_h");
+		} else {
+			sprintf(reg_l_name, "osc%d_freq_word_l", i);
+			sprintf(reg_h_name, "osc%d_freq_word_h", i);
+		}
+		if (reg_read_by_name(reg_l_name, &freq_l) != 0 ||
+			reg_read_by_name(reg_h_name, &freq_h) != 0) {
+			return SCPI_RES_ERR;
+		}
+		freq_code = ((uint64_t)(freq_h & 0xFFFF) << 32) | freq_l;
+		freq[i] = (double)freq_code / (double)((1ULL << 48) - 1)
+			* (i == 0 ? PLL_SAMPLE_RATE : OSC_SAMPLE_RATE);
 	}
-
-	reg_read_by_name("pll_freq_l", &freq_l);
-	reg_read_by_name("pll_freq_h", &freq_h);
-
-	freq_code = ((uint64_t)freq_h << 32) | ((uint64_t)freq_l);
-
-	freq = freq_code / pow(2, 48) * zwdx_oscillator_ref_clock_hz();
-
-	SCPI_ResultArrayDouble(context, &freq, 1, SCPI_FORMAT_ASCII);
+	SCPI_ResultArrayDouble(context, freq, 9, SCPI_FORMAT_ASCII);
 
 	return SCPI_RES_OK;
 }
 
-
-static scpi_result_t zwdx_set_demo_ref_mode(scpi_t *context)
+//demodulator reference source setting, 0:OSC0(INT) 1:IN1(EXT) 2:IN2(EXT)
+static scpi_result_t zwdx_set_demo_ref_source(scpi_t *context)
 {
-	int32_t channel, param2;
-	ParamValue pv;
+	double ch, source;
+	uint32_t code;
 
-	if (!SCPI_ParamInt32(context, &channel, TRUE)) {
+	if (!SCPI_ParamDouble(context, &ch, TRUE) ||
+		!SCPI_ParamDouble(context, &source, TRUE)) {
 		return SCPI_RES_ERR;
 	}
 
-    if (!SCPI_ParamInt32(context, &param2, TRUE)) {
-		return SCPI_RES_ERR;
-	}
-	(void)channel;
-
-	pv.type = PARAM_INT32;
-	pv.value.i32 = param2;
-	g_param.g_demod_param[0].osc_source = param2;
-	set_param_by_name(PARAM_CURRENT, "demo_ref_mode_ch1", 1, pv);
-
+	/* User: 0=OSC, 1=IN1, 2=IN2, 3=constant; FPGA swaps IN1/IN2. */
+	code = source == 1 ? 2 : (source == 2 ? 1 : (uint32_t)source);
+	reg_write_by_name("ref_source", code);
+	g_param.g_demod_param[0].osc_source = (int32_t)source;
+	set_param_by_name(PARAM_CURRENT, "demo_ref_source_ch1", 1, (ParamValue){.type = PARAM_DOUBLE, .value.d = source});
 	return SCPI_RES_OK;
 }
 
+//PLL reference source setting, 0:IN1 1:IN2
 static scpi_result_t zwdx_set_ref_source(scpi_t *context)
 {
 	int32_t param1;
@@ -970,11 +942,11 @@ static scpi_result_t zwdx_set_ref_source(scpi_t *context)
         return SCPI_RES_ERR;
 	}
 
-	reg_write_by_name("pll_source", (uint32_t)param1);
-
 	pv.type = PARAM_INT32;
 	pv.value.i32 = param1;
 	set_param_by_name(PARAM_CURRENT,"ref_source", 0, pv);
+
+	reg_write_by_name("pll_source", (uint32_t)param1);
 
 	return SCPI_RES_OK;
 }
@@ -982,8 +954,13 @@ static scpi_result_t zwdx_set_ref_source(scpi_t *context)
 static scpi_result_t zwdx_set_ref_sys_high(scpi_t *context)
 {
 	double param1;
+	double range;
 	int32_t srccode;
 	ParamValue pv;
+	ParamValue getpv;
+	int32_t ref_source;
+	int32_t input_range;
+	const char *input_range_param_name;
 
 	if (!SCPI_ParamDouble(context, &param1, TRUE)) {
 		return SCPI_RES_ERR;
@@ -992,15 +969,27 @@ static scpi_result_t zwdx_set_ref_sys_high(scpi_t *context)
 	pv.type = PARAM_DOUBLE;
 	pv.value.d = param1;
 
-	if(get_device_model() == DEVICE_MODEL_L500K) {
-		srccode = (int32_t)(param1 * (double)((1ULL << 15) - 1) / 2.5);
-	} else {
-		srccode = (int32_t)(param1 * (pow(2, 19) - 1) / 10.0);
+	/* MFILAB PLL reference source:
+	 *   ref_source 0:IN1, 1:IN2
+	 *   si_vol_range 0:+/-0.5 V, 1:+/-5 V
+	 */
+	ref_source = 0;
+	if(get_param_by_name(PARAM_CURRENT, "ref_source", 0, &getpv) == 0) {
+		ref_source = getpv.value.i32;
 	}
 
+	input_range_param_name = (ref_source == 0) ? "si_vol_range_ch1" : "si_vol_range_ch2";
+	input_range = 1;
+	if(get_param_by_name(PARAM_CURRENT, input_range_param_name, 1, &getpv) == 0) {
+		input_range = getpv.value.i32;
+	}
+
+	range = (input_range == 0) ? 0.5 : 5.0;
+	srccode = (int32_t)(param1 * (pow(2, 15) - 1) / range);
+
+	reg_write_by_name("pll_ref_hysteresis_high", srccode);
 
 	set_param_by_name(PARAM_CURRENT,"ref_hys_high", 0, pv);
-	reg_write_by_name("pll_ref_hysteresis_high", srccode);
 
 	return SCPI_RES_OK;
 }
@@ -1008,27 +997,42 @@ static scpi_result_t zwdx_set_ref_sys_high(scpi_t *context)
 static scpi_result_t zwdx_set_ref_sys_low(scpi_t *context)
 {
 	double param1;
+	double range;
 	int32_t srccode;
 	ParamValue pv;
+	ParamValue getpv;
+	int32_t ref_source;
+	int32_t input_range;
+	const char *input_range_param_name;
 
 	if (!SCPI_ParamDouble(context, &param1, TRUE)) {
 		return SCPI_RES_ERR;
 	}
 
-
-	reg_write_by_name("pll_ref_hysteresis_low", param1);
-
 	pv.type = PARAM_DOUBLE;
 	pv.value.d = param1;
 
-	if(get_device_model() == DEVICE_MODEL_L500K) {
-		srccode = (int32_t)(param1 * (double)((1ULL << 15) - 1) / 2.5);
-	} else {
-		srccode = (int32_t)(param1 * (pow(2, 19) - 1) / 10.0);
+	/* MFILAB PLL reference source:
+	 *   ref_source 0:IN1, 1:IN2
+	 *   si_vol_range 0:+/-0.5 V, 1:+/-5 V
+	 */
+	ref_source = 0;
+	if(get_param_by_name(PARAM_CURRENT, "ref_source", 0, &getpv) == 0) {
+		ref_source = getpv.value.i32;
 	}
 
-	set_param_by_name(PARAM_CURRENT,"ref_hys_low", 0, pv);
+	input_range_param_name = (ref_source == 0) ? "si_vol_range_ch1" : "si_vol_range_ch2";
+	input_range = 1;
+	if(get_param_by_name(PARAM_CURRENT, input_range_param_name, 1, &getpv) == 0) {
+		input_range = getpv.value.i32;
+	}
+
+	range = (input_range == 0) ? 0.5 : 5.0;
+	srccode = (int32_t)(param1 * (pow(2, 15) - 1) / range);
+
 	reg_write_by_name("pll_ref_hysteresis_low", srccode);
+
+	set_param_by_name(PARAM_CURRENT,"ref_hys_low", 0, pv);
 
 	return SCPI_RES_OK;
 }
@@ -1051,52 +1055,46 @@ static scpi_result_t zwdx_set_ref_filter_win(scpi_t *context)
 	return SCPI_RES_OK;
 }
 
-static scpi_result_t zwdx_set_ref_calc_time(scpi_t *context)
+static scpi_result_t zwdx_set_ref_stat_period(scpi_t *context)
 {
-	double param1;
+	double value;
 	uint64_t calc_time;
-	ParamValue pv;
 
-	if (!SCPI_ParamDouble(context, &param1, TRUE)) {
+	if (!SCPI_ParamDouble(context, &value, TRUE) || !isfinite(value) || value <= 0.0) {
 		return SCPI_RES_ERR;
 	}
 
-	if(g_device_model == DEVICE_MODEL_L500K) {
-		calc_time = (uint64_t)(param1 * pow(10, 9) / 500.0); //2MB
-	} else if(g_device_model == DEVICE_MODEL_M005M_VV || g_device_model == DEVICE_MODEL_M005M_VI ||
-		g_device_model == DEVICE_MODEL_M005M) {
-		calc_time = (uint64_t)(param1 * pow(10, 9) / 25.0);	//40M
-	}
-
-	reg_write_by_name("pll_calc_time_l", (uint32_t)(calc_time & 0xFFFFFFFF));
-	reg_write_by_name("pll_calc_time_h", (uint32_t)((calc_time >> 32) & 0xFFFFFFFF));
-
-	pv.type = PARAM_DOUBLE;
-	pv.value.d = param1;
-	set_param_by_name(PARAM_CURRENT,"ref_calc_time", 0, pv);
-
+	/* Same Hz interface as L500K; MFILAB uses 500 MHz (2 ns ticks). */
+	if (500e6 / value >= (double)UINT64_MAX) return SCPI_RES_ERR;
+	calc_time = (uint64_t)(500e6 / value);
+	reg_write_by_name("pll_calc_time_l", (uint32_t)calc_time);
+	reg_write_by_name("pll_calc_time_h", (uint32_t)(calc_time >> 32));
+	reg_write_by_name("pll_bigwidth_write_en", 1);
+	reg_write_by_name("pll_bigwidth_write_en", 0);
+	set_param_by_name(PARAM_CURRENT, "ref_stat_period", 0, (ParamValue){.type = PARAM_DOUBLE, .value.d = value});
 	return SCPI_RES_OK;
-
 }
 
-static scpi_result_t zwdx_set_ref_intfilter_win(scpi_t *context)
+static scpi_result_t zwdx_set_ref_timeout(scpi_t *context)
 {
-	int32_t param1;
-	ParamValue pv;
+	double value;
+	uint64_t timeout;
 
-	if (!SCPI_ParamInt32(context, &param1, TRUE)) {
+	if (!SCPI_ParamDouble(context, &value, TRUE) || !isfinite(value) || value < 0.0) {
 		return SCPI_RES_ERR;
 	}
 
-	pv.type = PARAM_INT32;
-	pv.value.i32 = param1;
-
-	reg_write_by_name("ref_mov_fir_ratio", param1);
-
-	set_param_by_name(PARAM_CURRENT,"ref_intfilter_win", 0, pv);
-
+	/* Timeout in seconds, converted to 500 MHz ticks. */
+	if (value * 500e6 >= (double)UINT64_MAX) return SCPI_RES_ERR;
+	timeout = (uint64_t)(value * 500e6);
+	reg_write_by_name("pll_calc_stopdog_l", (uint32_t)timeout);
+	reg_write_by_name("pll_calc_stopdog_h", (uint32_t)(timeout >> 32));
+	reg_write_by_name("pll_bigwidth_write_en", 1);
+	reg_write_by_name("pll_bigwidth_write_en", 0);
+	set_param_by_name(PARAM_CURRENT, "ref_timeout", 0, (ParamValue){.type = PARAM_DOUBLE, .value.d = value});
 	return SCPI_RES_OK;
 }
+
 
 
 void config_si_vv_regs(SiVolCtrolRegs regs, int index)
@@ -1240,147 +1238,79 @@ static scpi_result_t zwdx_set_so_oscsource(scpi_t *context)
 
 #endif
 
+/* MFILAB OSC config
+ * OSC is a global resource now:
+ *   osc index 0..7 -> oscillators1..8
+ *   OSC0 is used as the demod internal reference, but still belongs to this global OSC block.
+ */
+static scpi_result_t scpi_set_osc_freq(scpi_t *context)
+{
+	double osc, value;
+	uint64_t freq_word;
+	char reg_l_name[64], reg_h_name[64], en_name[64], param_name[64];
+
+	if (!SCPI_ParamDouble(context, &osc, TRUE) ||
+		!SCPI_ParamDouble(context, &value, TRUE) ||
+		!isfinite(osc) || osc < 0 || osc > 7 || osc != (int)osc ||
+		!isfinite(value) || value < 0 || value >= OSC_SAMPLE_RATE) {
+		return SCPI_RES_ERR;
+	}
+
+	sprintf(reg_l_name, "oscillators%d_freq_word_l", (int)osc + 1);
+	sprintf(reg_h_name, "oscillators%d_freq_word_h", (int)osc + 1);
+	sprintf(en_name, "oscillators%d_freq_en", (int)osc + 1);
+	freq_word = (uint64_t)(value * (double)((1ULL << 48) - 1) / OSC_SAMPLE_RATE);
+
+	reg_write_by_name(reg_l_name, (uint32_t)(freq_word & 0xFFFFFFFF));
+	reg_write_by_name(reg_h_name, (uint32_t)((freq_word >> 32) & 0xFFFF));
+	reg_write_by_name(en_name, 1);
+	reg_write_by_name(en_name, 0);
+
+	/* Same apply sequence as L500K. */
+	reg_write_by_name("soft_trig", 0);
+	reg_write_by_name("soft_trig", 1);
+	reg_write_by_name("soft_trig", 0);
+	sprintf(param_name, "osc%d_freq", (int)osc);
+	set_param_by_name(PARAM_CURRENT, param_name, 1, (ParamValue){.type = PARAM_DOUBLE, .value.d = value});
+	
+	return SCPI_RES_OK;
+}
+
+static scpi_result_t scpi_set_osc_sync(scpi_t *context)
+{
+	(void)context;
+	/* Synchronize all oscillators with one rising edge, as in L500K. */
+	reg_write_by_name("osc_work_all", 0);
+	reg_write_by_name("osc_work_all", 1);
+	reg_write_by_name("osc_work_all", 0);
+
+	/*synchronize start*/
+	reg_write_by_name("soft_trig", 0);
+	reg_write_by_name("soft_trig", 1);
+	reg_write_by_name("soft_trig", 0);
+
+	return SCPI_RES_OK;
+}
+
 /* MFILAB SignalOut config
  * Register table: SignalOut config.
  * The low/high register pairs are handled as one SCPI parameter here:
- *   osc_phase       -> signalout_osc_phase_l / signalout_osc_phase_h
- *   osc_freq_word   -> signalout_osc_freq_word_l / signalout_osc_freq_word_h
- *   scaling1        -> signalout_scaling1_l / signalout_scaling1_h
+ *   scaling1 -> signalout_scaling1_l / signalout_scaling1_h
  */
-static scpi_result_t scpi_set_so_osc_enable(scpi_t *context)
+static int scpi_save_so_param(int32_t channel, const char *name_ch1, const char *name_ch2, double value)
 {
-	double channel;
-	double value;
-	uint32_t reg_value;
+	ParamValue pv;
+	pv.type = PARAM_DOUBLE;
+	pv.value.d = value;
 
-	if (!SCPI_ParamDouble(context, &channel, TRUE)) {
-		return SCPI_RES_ERR;
+	if (channel == CH1) {
+		return set_param_by_name(PARAM_CURRENT, name_ch1, 1, pv);
 	}
-	if (!SCPI_ParamDouble(context, &value, TRUE)) {
-		return SCPI_RES_ERR;
-	}
-
-	reg_value = (uint32_t)value;
-	if ((int32_t)channel == CH1) {
-		reg_write_by_name("signalout1_osc_enable", reg_value);
-	} else if ((int32_t)channel == CH2) {
-		reg_write_by_name("signalout2_osc_enable", reg_value);
-	} else {
-		return SCPI_RES_ERR;
+	if (channel == CH2) {
+		return set_param_by_name(PARAM_CURRENT, name_ch2, 1, pv);
 	}
 
-	return SCPI_RES_OK;
-}
-
-static scpi_result_t scpi_set_so_osc_mode(scpi_t *context)
-{
-	double channel;
-	double value;
-	uint32_t reg_value;
-
-	if (!SCPI_ParamDouble(context, &channel, TRUE)) {
-		return SCPI_RES_ERR;
-	}
-	if (!SCPI_ParamDouble(context, &value, TRUE)) {
-		return SCPI_RES_ERR;
-	}
-
-	reg_value = (uint32_t)value;
-	if ((int32_t)channel == CH1) {
-		reg_write_by_name("signalout1_osc_mode", reg_value);
-	} else if ((int32_t)channel == CH2) {
-		reg_write_by_name("signalout2_osc_mode", reg_value);
-	} else {
-		return SCPI_RES_ERR;
-	}
-
-	return SCPI_RES_OK;
-}
-
-static scpi_result_t scpi_set_so_osc_rst(scpi_t *context)
-{
-	double channel;
-	double value;
-	uint32_t reg_value;
-
-	if (!SCPI_ParamDouble(context, &channel, TRUE)) {
-		return SCPI_RES_ERR;
-	}
-	if (!SCPI_ParamDouble(context, &value, TRUE)) {
-		return SCPI_RES_ERR;
-	}
-
-	reg_value = (uint32_t)value;
-	if ((int32_t)channel == CH1) {
-		reg_write_by_name("signalout1_osc_rst", reg_value);
-	} else if ((int32_t)channel == CH2) {
-		reg_write_by_name("signalout2_osc_rst", reg_value);
-	} else {
-		return SCPI_RES_ERR;
-	}
-
-	return SCPI_RES_OK;
-}
-
-static scpi_result_t scpi_set_so_osc_phase(scpi_t *context)
-{
-	double channel;
-	double value;
-	double phase;
-	uint64_t phase_word;
-
-	if (!SCPI_ParamDouble(context, &channel, TRUE)) {
-		return SCPI_RES_ERR;
-	}
-	if (!SCPI_ParamDouble(context, &value, TRUE)) {
-		return SCPI_RES_ERR;
-	}
-
-	phase = value;
-	if (phase < 0.0) {
-		phase += 360.0;
-	}
-	phase_word = (uint64_t)(phase * (double)(1ULL << 48) / 360.0 + 0.5);
-
-	if ((int32_t)channel == CH1) {
-		reg_write_by_name("signalout1_osc_phase_l", (uint32_t)(phase_word & 0xFFFFFFFF));
-		reg_write_by_name("signalout1_osc_phase_h", (uint32_t)((phase_word >> 32) & 0xFFFF));
-	} else if ((int32_t)channel == CH2) {
-		reg_write_by_name("signalout2_osc_phase_l", (uint32_t)(phase_word & 0xFFFFFFFF));
-		reg_write_by_name("signalout2_osc_phase_h", (uint32_t)((phase_word >> 32) & 0xFFFF));
-	} else {
-		return SCPI_RES_ERR;
-	}
-
-	return SCPI_RES_OK;
-}
-
-static scpi_result_t scpi_set_so_osc_freq(scpi_t *context)
-{
-	double channel;
-	double value;
-	uint64_t freq_word;
-
-	if (!SCPI_ParamDouble(context, &channel, TRUE)) {
-		return SCPI_RES_ERR;
-	}
-	if (!SCPI_ParamDouble(context, &value, TRUE)) {
-		return SCPI_RES_ERR;
-	}
-
-	freq_word = (uint64_t)(value * (double)(1ULL << 48) / 1000000000.0 + 0.5);
-
-	if ((int32_t)channel == CH1) {
-		reg_write_by_name("signalout1_osc_freq_word_l", (uint32_t)(freq_word & 0xFFFFFFFF));
-		reg_write_by_name("signalout1_osc_freq_word_h", (uint32_t)((freq_word >> 32) & 0xFFFF));
-	} else if ((int32_t)channel == CH2) {
-		reg_write_by_name("signalout2_osc_freq_word_l", (uint32_t)(freq_word & 0xFFFFFFFF));
-		reg_write_by_name("signalout2_osc_freq_word_h", (uint32_t)((freq_word >> 32) & 0xFFFF));
-	} else {
-		return SCPI_RES_ERR;
-	}
-
-	return SCPI_RES_OK;
+	return -1;
 }
 
 static scpi_result_t scpi_set_so_enable(scpi_t *context)
@@ -1410,12 +1340,15 @@ static scpi_result_t scpi_set_so_enable(scpi_t *context)
 	reg_write_by_name("osc_work_all", 1);
 	usleep(100);
 
-	if(g_param.g_dev_trig_source == INT) {
+	if(g_param.g_dev_trig_source == INTTRIG) {
 		P_LOG_DEBUG("intern trig source send soft trigger\r\n");
 		send_soft_trig();
-	}else if(g_param.g_dev_trig_source == EXT) {
+	}else if(g_param.g_dev_trig_source == EXTTRIG) {
 		/*extern thread handle*/
 	}
+
+	scpi_save_so_param((int32_t)channel, "so_enable_ch1", "so_enable_ch2", value);
+	P_LOG_DEBUG("so_enable_ch%d: %f\r\n", (int32_t)channel, value);
 
 	return SCPI_RES_OK;
 }
@@ -1433,8 +1366,10 @@ static scpi_result_t scpi_set_so_source1(scpi_t *context)
 		return SCPI_RES_ERR;
 	}
 
-	/* UI option is zero-based. Register value 0 is empty, so normal source starts from 1. */
-	reg_value = (uint32_t)value + 1;
+	/* UI option is zero-based. Register 0x00-0x02 are not used by the UI,
+	 * so host value 0 maps to 0x03:X, 1 maps to 0x04:Y, and so on.
+	 */
+	reg_value = (uint32_t)value + 3;
 	if ((int32_t)channel == CH1) {
 		reg_write_by_name("signalout1_source1", reg_value);
 	} else if ((int32_t)channel == CH2) {
@@ -1442,6 +1377,8 @@ static scpi_result_t scpi_set_so_source1(scpi_t *context)
 	} else {
 		return SCPI_RES_ERR;
 	}
+
+	scpi_save_so_param((int32_t)channel, "so_source1_ch1", "so_source1_ch2", value);
 
 	return SCPI_RES_OK;
 }
@@ -1459,16 +1396,24 @@ static scpi_result_t scpi_set_so_scaling1(scpi_t *context)
 		return SCPI_RES_ERR;
 	}
 
-	scaling = (uint64_t)(value * (double)(1ULL << 32) + 0.5);
+	/* Calibrate the hardware gain, but keep the requested Scale in the parameter table. */
+	scaling = (uint64_t)(soscale_mfilab_calibrate_value((int32_t)channel, value) * (1ULL << 32) - 1);
 	if ((int32_t)channel == CH1) {
 		reg_write_by_name("signalout1_scaling1_l", (uint32_t)(scaling & 0xFFFFFFFF));
 		reg_write_by_name("signalout1_scaling1_h", (uint32_t)((scaling >> 32) & 0xFFFFFFFF));
+		/* Commit both 32-bit words together. */
+		reg_write_by_name("signalout1_bigwidth_write_en", 1);
+		reg_write_by_name("signalout1_bigwidth_write_en", 0);
 	} else if ((int32_t)channel == CH2) {
 		reg_write_by_name("signalout2_scaling1_l", (uint32_t)(scaling & 0xFFFFFFFF));
 		reg_write_by_name("signalout2_scaling1_h", (uint32_t)((scaling >> 32) & 0xFFFFFFFF));
+		reg_write_by_name("signalout2_bigwidth_write_en", 1);
+		reg_write_by_name("signalout2_bigwidth_write_en", 0);
 	} else {
 		return SCPI_RES_ERR;
 	}
+
+	scpi_save_so_param((int32_t)channel, "so_scaling1_ch1", "so_scaling1_ch2", value);
 
 	return SCPI_RES_OK;
 }
@@ -1495,23 +1440,26 @@ static scpi_result_t scpi_set_so_offset_enable(scpi_t *context)
 		return SCPI_RES_ERR;
 	}
 
+	scpi_save_so_param((int32_t)channel, "so_offset_enable_ch1", "so_offset_enable_ch2", value);
+
 	return SCPI_RES_OK;
 }
 
 static scpi_result_t scpi_set_so_offset(scpi_t *context)
 {
 	double channel;
-	double value;
+	double offset_value;
 	int32_t code;
 
 	if (!SCPI_ParamDouble(context, &channel, TRUE)) {
 		return SCPI_RES_ERR;
 	}
-	if (!SCPI_ParamDouble(context, &value, TRUE)) {
+	if (!SCPI_ParamDouble(context, &offset_value, TRUE)) {
 		return SCPI_RES_ERR;
 	}
 
-	code = (int32_t)(value / 2.0 * (double)((1 << 15) - 1) + (value >= 0.0 ? 0.5 : -0.5));
+	code = (int32_t)(sooffset_mfilab_calibrate_value((int32_t)channel, offset_value) /
+		2.0 * (double)((1 << 15) - 1)); // Fixed +/-2 V; save the requested value below.
 	if ((int32_t)channel == CH1) {
 		reg_write_by_name("singalout1_offset", (uint32_t)code);
 	} else if ((int32_t)channel == CH2) {
@@ -1519,6 +1467,8 @@ static scpi_result_t scpi_set_so_offset(scpi_t *context)
 	} else {
 		return SCPI_RES_ERR;
 	}
+
+	scpi_save_so_param((int32_t)channel, "so_offset_ch1", "so_offset_ch2", offset_value);
 
 	return SCPI_RES_OK;
 }
@@ -1545,6 +1495,8 @@ static scpi_result_t scpi_set_so_limit_enable(scpi_t *context)
 		return SCPI_RES_ERR;
 	}
 
+	scpi_save_so_param((int32_t)channel, "so_limit_enable_ch1", "so_limit_enable_ch2", value);
+
 	return SCPI_RES_OK;
 }
 
@@ -1569,6 +1521,8 @@ static scpi_result_t scpi_set_so_upper_limit(scpi_t *context)
 	} else {
 		return SCPI_RES_ERR;
 	}
+
+	scpi_save_so_param((int32_t)channel, "so_upper_limit_ch1", "so_upper_limit_ch2", value);
 
 	return SCPI_RES_OK;
 }
@@ -1595,6 +1549,8 @@ static scpi_result_t scpi_set_so_lower_limit(scpi_t *context)
 		return SCPI_RES_ERR;
 	}
 
+	scpi_save_so_param((int32_t)channel, "so_lower_limit_ch1", "so_lower_limit_ch2", value);
+
 	return SCPI_RES_OK;
 }
 
@@ -1620,436 +1576,304 @@ static scpi_result_t scpi_set_so_constant1(scpi_t *context)
 		return SCPI_RES_ERR;
 	}
 
-	return SCPI_RES_OK;
-}
-
-static scpi_result_t scpi_set_so_osc_type(scpi_t *context)
-{
-	double channel;
-	double value;
-	uint32_t reg_value;
-
-	if (!SCPI_ParamDouble(context, &channel, TRUE)) {
-		return SCPI_RES_ERR;
-	}
-	if (!SCPI_ParamDouble(context, &value, TRUE)) {
-		return SCPI_RES_ERR;
-	}
-
-	/* UI option is zero-based. Register value 0 is empty, so normal wave type starts from 1. */
-	reg_value = (uint32_t)value + 1;
-	if ((int32_t)channel == CH1) {
-		reg_write_by_name("signalout1_osc_type", reg_value);
-	} else if ((int32_t)channel == CH2) {
-		reg_write_by_name("signalout2_osc_type", reg_value);
-	} else {
-		return SCPI_RES_ERR;
-	}
+	scpi_save_so_param((int32_t)channel, "so_constant1_ch1", "so_constant1_ch2", value);
 
 	return SCPI_RES_OK;
 }
 
-static scpi_result_t scpi_set_so_osc_pluse_duty(scpi_t *context)
+/* L500K-style ch1..ch8 selects lookup table 1..8; osc_index selects OSC0..OSC7.
+ * Example: ch=2, out_ch=1 -> oscillators2_sinout1_en.
+ */
+static scpi_result_t zwdx_set_demo_ref_mode(scpi_t *context)
 {
-	double channel;
-	double value;
-	uint32_t reg_value;
+	double ch, mode;
+	char reg_name[64], param_name[64];
 
-	if (!SCPI_ParamDouble(context, &channel, TRUE)) {
-		return SCPI_RES_ERR;
-	}
-	if (!SCPI_ParamDouble(context, &value, TRUE)) {
+	if (!SCPI_ParamDouble(context, &ch, TRUE) ||
+		!SCPI_ParamDouble(context, &mode, TRUE)) {
 		return SCPI_RES_ERR;
 	}
 
-	/* Simple example for now: write the value directly. Replace with duty conversion later. */
-	reg_value = (uint32_t)value;
-	if ((int32_t)channel == CH1) {
-		reg_write_by_name("signalout1_osc_pluse_duty", reg_value);
-	} else if ((int32_t)channel == CH2) {
-		reg_write_by_name("signalout2_osc_pluse_duty", reg_value);
-	} else {
-		return SCPI_RES_ERR;
-	}
-
+	/* 0=manual, 1=PLL reference, 2=manual/PLL difference. */
+	sprintf(reg_name, "oscillators%d_mode", (int)ch);
+	reg_write_by_name(reg_name, (uint32_t)mode + 1);
+	g_param.g_demod_param[(int)ch - 1].ref_mode = (int32_t)mode;
+	sprintf(param_name, "demo_ref_mode_ch%d", (int)ch);
+	set_param_by_name(PARAM_CURRENT, param_name, 1, (ParamValue){.type = PARAM_DOUBLE, .value.d = mode});
 	return SCPI_RES_OK;
 }
 
-static scpi_result_t scpi_set_so_osc_scaling(scpi_t *context)
+static scpi_result_t zwdx_set_demo_oscnumber(scpi_t *context)
 {
-	double channel;
-	double value;
-	uint32_t reg_value;
+	double ch, osc_index;
+	char reg_name[64], param_name[64];
 
-	if (!SCPI_ParamDouble(context, &channel, TRUE)) {
-		return SCPI_RES_ERR;
-	}
-	if (!SCPI_ParamDouble(context, &value, TRUE)) {
+	if (!SCPI_ParamDouble(context, &ch, TRUE) ||
+		!SCPI_ParamDouble(context, &osc_index, TRUE)) {
 		return SCPI_RES_ERR;
 	}
 
-	reg_value = (uint32_t)(value * (double)(1 << 16) + 0.5);
-	if ((int32_t)channel == CH1) {
-		reg_write_by_name("signalout1_osc_scaling", reg_value);
-	} else if ((int32_t)channel == CH2) {
-		reg_write_by_name("signalout2_osc_scaling", reg_value);
-	} else {
-		return SCPI_RES_ERR;
-	}
-
-	return SCPI_RES_OK;
-}
-
-static scpi_result_t scpi_set_so_add_osc1_enable(scpi_t *context)
-{
-	double channel;
-	double value;
-	uint32_t reg_value;
-
-	if (!SCPI_ParamDouble(context, &channel, TRUE)) {
-		return SCPI_RES_ERR;
-	}
-	if (!SCPI_ParamDouble(context, &value, TRUE)) {
-		return SCPI_RES_ERR;
-	}
-
-	reg_value = (uint32_t)value;
-	if ((int32_t)channel == CH1) {
-		reg_write_by_name("signalout1_add_osc1_en", reg_value);
-	} else if ((int32_t)channel == CH2) {
-		reg_write_by_name("signalout2_add_osc1_en", reg_value);
-	} else {
-		return SCPI_RES_ERR;
-	}
-
-	return SCPI_RES_OK;
-}
-
-static scpi_result_t scpi_set_so_add_osc2_enable(scpi_t *context)
-{
-	double channel;
-	double value;
-	uint32_t reg_value;
-
-	if (!SCPI_ParamDouble(context, &channel, TRUE)) {
-		return SCPI_RES_ERR;
-	}
-	if (!SCPI_ParamDouble(context, &value, TRUE)) {
-		return SCPI_RES_ERR;
-	}
-
-	reg_value = (uint32_t)value;
-	if ((int32_t)channel == CH1) {
-		reg_write_by_name("signalout1_add_osc2_en", reg_value);
-	} else if ((int32_t)channel == CH2) {
-		reg_write_by_name("signalout2_add_osc2_en", reg_value);
-	} else {
-		return SCPI_RES_ERR;
-	}
-
-	return SCPI_RES_OK;
-}
-
-static scpi_result_t zwdx_set_demo_oscpmode(scpi_t *context)
-{
-	int32_t channel, param2;
-	ParamValue pv;
-
-	if (!SCPI_ParamInt32(context, &channel, TRUE)) {
-		return SCPI_RES_ERR;
-	}
-	if (!SCPI_ParamInt32(context, &param2, TRUE)) {
-        return SCPI_RES_ERR;
-    }
-	(void)channel;
-
-	reg_write_by_name("oscillators1_mode", (uint32_t)param2);
-	pv.type = PARAM_INT32;
-	pv.value.i32 = param2;
-	set_param_by_name(PARAM_CURRENT, "demo_osc_phasemode_ch1", 1, pv);
-
-	return SCPI_RES_OK;
-}
-
-static scpi_result_t zwdx_set_demo_oscrst(scpi_t *context)
-{
-	int32_t channel;
-	double  param2;
-
-	if (!SCPI_ParamInt32(context, &channel, TRUE)) {
-		return SCPI_RES_ERR;
-	}
-	if (!SCPI_ParamDouble(context, &param2, TRUE)) {
-        return SCPI_RES_ERR;
-    }
-	(void)channel;
-
-	reg_write_by_name("oscillators1_rst", (uint32_t)param2);
-
-	return SCPI_RES_OK;
-}
-
-static scpi_result_t zwdx_set_demo_oscfreq(scpi_t *context)
-{
-	double temp;
-	uint64_t freq;
-	int32_t channel;
-	double  param2;
-	ParamValue pv;
-
-	if (!SCPI_ParamInt32(context, &channel, TRUE)) {
-		return SCPI_RES_ERR;
-	}
-	if (!SCPI_ParamDouble(context, &param2, TRUE)) {
-		return SCPI_RES_ERR;
-	}
-	(void)channel;
-
-	pv.type = PARAM_DOUBLE;
-	pv.value.d = param2;
-	temp = param2 * pow(2, 48) / 500000000.0 + 0.5;
-	freq = (uint64_t)temp;
-
-	reg_write_by_name("oscillators1_freq_word_l", (uint32_t)(freq & 0xFFFFFFFF));
-	reg_write_by_name("oscillators1_freq_word_h", (uint32_t)((freq >> 32)& 0xFFFFFFFF));
-	reg_write_by_name("oscillators1_en", 1);
-	g_param.g_demod_param[0].osc_freq = param2;
-	set_param_by_name(PARAM_CURRENT, "demo_osc_freq_ch1", 1, pv);
-
+	/* Select the phase accumulator for the selected lookup table, not its waveform type. */
+	sprintf(reg_name, "oscillators%d_source", (int)ch);
+	reg_write_by_name(reg_name, (uint32_t)osc_index + 1);
+	g_param.g_demod_param[(int)ch - 1].osc_index = (int32_t)osc_index;
+	sprintf(param_name, "demo_osc_number_ch%d", (int)ch);
+	set_param_by_name(PARAM_CURRENT, param_name, 1, (ParamValue){.type = PARAM_DOUBLE, .value.d = osc_index});
 	return SCPI_RES_OK;
 }
 
 static scpi_result_t zwdx_set_demo_oscphase(scpi_t *context)
 {
-	uint64_t phase_code;
-	int32_t channel;
-	double  param2, phase_deg;
+	double ch, phase;
+	char reg_name[64], param_name[64];
+	double phase_deg;
+	uint64_t code;
 
-	if (!SCPI_ParamInt32(context, &channel, TRUE)) {
+	if (!SCPI_ParamDouble(context, &ch, TRUE) ||
+		!SCPI_ParamDouble(context, &phase, TRUE)) {
 		return SCPI_RES_ERR;
 	}
-	if (!SCPI_ParamDouble(context, &param2, TRUE)) {
-		return SCPI_RES_ERR;
-	}
-	(void)channel;
 
-	if(param2 < 0) {
-		phase_deg = param2 + 360;
-	} else {
-		phase_deg = param2;
-	}
-	phase_code = ((uint64_t)phase_deg * ((uint64_t)1 << 48)) / 360;
-
-	reg_write_by_name("oscillators1_phase_l", (uint32_t)(phase_code & 0xFFFFFFFF));
-	reg_write_by_name("oscillators1_phase_h", (uint32_t)((phase_code >> 32)& 0xFFFFFFFF));
-
+	phase_deg = fmod(phase, 360.0);
+	if (phase_deg < 0) phase_deg += 360.0;
+	code = (uint64_t)(phase_deg * (double)(1ULL << 48) / 360.0);
+	sprintf(reg_name, "oscillators%d_phase_l", (int)ch);
+	reg_write_by_name(reg_name, (uint32_t)code);
+	sprintf(reg_name, "oscillators%d_phase_h", (int)ch);
+	reg_write_by_name(reg_name, (uint32_t)((code >> 32) & 0xFFFF));
+	sprintf(reg_name, "oscillators%d_freq_en", (int)ch);
+	reg_write_by_name(reg_name, 1);
+	sprintf(reg_name, "oscillators%d_freq_en", (int)ch);
+	reg_write_by_name(reg_name, 0);
+	sprintf(param_name, "demo_osc_phase_ch%d", (int)ch);
+	set_param_by_name(PARAM_CURRENT, param_name, 1, (ParamValue){.type = PARAM_DOUBLE, .value.d = phase});
 	return SCPI_RES_OK;
 }
 
 static scpi_result_t zwdx_set_demo_oscharm(scpi_t *context)
 {
-	double harm;
-	int32_t channel;
-	double  param2;
-	ParamValue pv;
+	double ch, harm;
+	char reg_name[64], param_name[64];
 
-	if (!SCPI_ParamInt32(context, &channel, TRUE)) {
+	if (!SCPI_ParamDouble(context, &ch, TRUE) ||
+		!SCPI_ParamDouble(context, &harm, TRUE)) {
 		return SCPI_RES_ERR;
 	}
-	if (!SCPI_ParamDouble(context, &param2, TRUE)) {
+
+	sprintf(reg_name, "oscillators%d_harm", (int)ch);
+	reg_write_by_name(reg_name, (uint32_t)harm);
+	g_param.g_demod_param[(int)ch - 1].osc_harm = harm;
+	sprintf(param_name, "demo_osc_harm_ch%d", (int)ch);
+	set_param_by_name(PARAM_CURRENT, param_name, 1, (ParamValue){.type = PARAM_DOUBLE, .value.d = harm});
+	return SCPI_RES_OK;
+}
+
+static scpi_result_t zwdx_set_demo_oscmode(scpi_t *context)
+{
+	double ch, out_ch, mode;
+	char reg_name[64], param_name[64];
+
+	if (!SCPI_ParamDouble(context, &ch, TRUE) ||
+		!SCPI_ParamDouble(context, &out_ch, TRUE) ||
+		!SCPI_ParamDouble(context, &mode, TRUE)) {
 		return SCPI_RES_ERR;
 	}
-	(void)channel;
 
-	pv.type = PARAM_DOUBLE;
-	pv.value.d = param2;
-	harm = param2;
-	g_param.g_demod_param[0].osc_harm = harm;
-	set_param_by_name(PARAM_CURRENT, "demo_osc_harm_ch1", 1, pv);
+	/* Both outputs share the selected lookup table's waveform type, as in L500K. */
+	sprintf(reg_name, "oscillators%d_osc_type", (int)ch);
+	reg_write_by_name(reg_name, (uint32_t)mode + 1);
+	sprintf(param_name, "demo_osc_mode_ch%d_out1", (int)ch);
+	set_param_by_name(PARAM_CURRENT, param_name, 2, (ParamValue){.type = PARAM_DOUBLE, .value.d = mode});
+	sprintf(param_name, "demo_osc_mode_ch%d_out2", (int)ch);
+	set_param_by_name(PARAM_CURRENT, param_name, 2, (ParamValue){.type = PARAM_DOUBLE, .value.d = mode});
+	return SCPI_RES_OK;
+}
 
+static scpi_result_t zwdx_set_demo_osc_pulse_duty(scpi_t *context)
+{
+	double ch, out_ch, duty;
+	char reg_name[64], param_name[64];
+	uint32_t code;
+
+	if (!SCPI_ParamDouble(context, &ch, TRUE) ||
+		!SCPI_ParamDouble(context, &out_ch, TRUE) ||
+		!SCPI_ParamDouble(context, &duty, TRUE)) {
+		return SCPI_RES_ERR;
+	}
+
+	code = (uint32_t)((1.0 - duty / 100.0) * (double)((1UL << 16) - 1));
+	sprintf(reg_name, "oscillators%d_osc_pluse_duty", (int)ch);
+	reg_write_by_name(reg_name, code);
+	sprintf(param_name, "demo_osc_duty_ch%d_out1", (int)ch);
+	set_param_by_name(PARAM_CURRENT, param_name, 2, (ParamValue){.type = PARAM_DOUBLE, .value.d = duty});
+	sprintf(param_name, "demo_osc_duty_ch%d_out2", (int)ch);
+	set_param_by_name(PARAM_CURRENT, param_name, 2, (ParamValue){.type = PARAM_DOUBLE, .value.d = duty});
+	return SCPI_RES_OK;
+}
+
+static scpi_result_t zwdx_set_demo_oscamp(scpi_t *context)
+{
+	double ch, out_ch, amp;
+	uint32_t code;
+	char reg_name[64], param_name[64];
+
+	if (!SCPI_ParamDouble(context, &ch, TRUE) ||
+		!SCPI_ParamDouble(context, &out_ch, TRUE) ||
+		!SCPI_ParamDouble(context, &amp, TRUE)) {
+		return SCPI_RES_ERR;
+	}
+
+	/* MFILAB amplitude is VP: output VP = scale * scale(1) * 2 VP. ±2VP*/
+	code = (uint32_t)(amp / 2.0 * (double)((1UL << 16) - 1));
+	sprintf(reg_name, "oscillators%d_sinout%d_scaling1", (int)ch, (int)out_ch);
+	reg_write_by_name(reg_name, code);
+	sprintf(param_name, "demo_osc_amp_ch%d_out%d", (int)ch, (int)out_ch);
+	set_param_by_name(PARAM_CURRENT, param_name, 2, (ParamValue){.type = PARAM_DOUBLE, .value.d = amp});
+	return SCPI_RES_OK;
+}
+
+static scpi_result_t zwdx_set_demo_oscampen(scpi_t *context)
+{
+	double ch, out_ch, enable;
+	char reg_name[64], param_name[64];
+
+	if (!SCPI_ParamDouble(context, &ch, TRUE) ||
+		!SCPI_ParamDouble(context, &out_ch, TRUE) ||
+		!SCPI_ParamDouble(context, &enable, TRUE)) {
+		return SCPI_RES_ERR;
+	}
+
+	sprintf(reg_name, "oscillators%d_sinout%d_en", (int)ch, (int)out_ch);
+	reg_write_by_name(reg_name, (uint32_t)enable);
+	sprintf(param_name, "demo_osc_amp_en_ch%d_out%d", (int)ch, (int)out_ch);
+	set_param_by_name(PARAM_CURRENT, param_name, 2, (ParamValue){.type = PARAM_DOUBLE, .value.d = enable});
 	return SCPI_RES_OK;
 }
 
 static scpi_result_t zwdx_set_demo_enable(scpi_t *context)
 {
-	uint32_t enable;
-	int32_t channel, param2;
-	ParamValue pv;
+	double ch, enable;
 
-	if (!SCPI_ParamInt32(context, &channel, TRUE)) {
+	if (!SCPI_ParamDouble(context, &ch, TRUE) ||
+		!SCPI_ParamDouble(context, &enable, TRUE)) {
 		return SCPI_RES_ERR;
 	}
-	if (!SCPI_ParamInt32(context, &param2, TRUE)) {
-		return SCPI_RES_ERR;
-	}
-	(void)channel;
 
-	pv.type = PARAM_INT32;
-	pv.value.i32 = param2;
-	enable = param2;
-	reg_write_by_name("demod1_enable", enable);
-	set_param_by_name(PARAM_CURRENT, "demo_state_ch1", 1, pv);
-
-	reg_write_by_name("osc_work_all", 0);
-	usleep(100);
-	reg_write_by_name("osc_work_all", 1);
-	usleep(100);
-
-	if(g_param.g_dev_trig_source == INT) {
-		reg_write_by_name("soft_trig", 0);
-		usleep(100);
-		reg_write_by_name("soft_trig", 1);
-		usleep(100);
-	    reg_write_by_name("soft_trig", 0);
-	}else if(g_param.g_dev_trig_source == EXT) {
-		/* external trigger handled separately */
-	}
-
+	reg_write_by_name("demod1_enable", (uint32_t)enable);
+	set_param_by_name(PARAM_CURRENT, "demo_state_ch1", 1, (ParamValue){.type = PARAM_DOUBLE, .value.d = enable});
 	return SCPI_RES_OK;
 }
 
 static scpi_result_t zwdx_set_demo_source(scpi_t *context)
 {
-	uint32_t source;
-	int32_t channel, param2;
-	ParamValue pv;
+	double ch, source;
 
-	if (!SCPI_ParamInt32(context, &channel, TRUE)) {
+	if (!SCPI_ParamDouble(context, &ch, TRUE) ||
+		!SCPI_ParamDouble(context, &source, TRUE)) {
 		return SCPI_RES_ERR;
 	}
-	if (!SCPI_ParamInt32(context, &param2, TRUE)) {
-		return SCPI_RES_ERR;
-	}
-	(void)channel;
 
-	pv.type = PARAM_INT32;
-	pv.value.i32 = param2;
-	source = param2;
-	reg_write_by_name("demod1_source", source);
-	set_param_by_name(PARAM_CURRENT, "demo_source_ch1", 1, pv);
-	g_param.g_demod_param[0].source = param2 ? DEMO_INPUT_CH2 : DEMO_INPUT_CH1;
-
+	reg_write_by_name("demod1_source", (uint32_t)source);
+	g_param.g_demod_param[0].source = source == 1 ? DEMO_INPUT_CH2 : DEMO_INPUT_CH1;
+	set_param_by_name(PARAM_CURRENT, "demo_source_ch1", 1, (ParamValue){.type = PARAM_DOUBLE, .value.d = source});
 	return SCPI_RES_OK;
 }
 
 static scpi_result_t zwdx_set_demo_fir_order(scpi_t *context)
 {
-	uint32_t order;
-	int32_t channel, param2;
-	ParamValue pv;
+	double ch, order;
 
-	if (!SCPI_ParamInt32(context, &channel, TRUE)) {
+	if (!SCPI_ParamDouble(context, &ch, TRUE) ||
+		!SCPI_ParamDouble(context, &order, TRUE)) {
 		return SCPI_RES_ERR;
 	}
-	if (!SCPI_ParamInt32(context, &param2, TRUE)) {
-		return SCPI_RES_ERR;
-	}
-	(void)channel;
 
-	pv.type = PARAM_INT32;
-	pv.value.i32 = param2;
-	order = param2;
-	reg_write_by_name("demod1_fir_order", order);
-	set_param_by_name(PARAM_CURRENT, "demo_fir_order_ch1", 1, pv);
-
+	reg_write_by_name("demod1_fir_order", (uint32_t)order);
+	set_param_by_name(PARAM_CURRENT, "demo_fir_order_ch1", 1, (ParamValue){.type = PARAM_DOUBLE, .value.d = order});
 	return SCPI_RES_OK;
 }
 
 static scpi_result_t zwdx_set_demo_fir_tc(scpi_t *context)
 {
-	double tc, param2;
-	int32_t channel;
+	double ch, tc;
 	uint64_t alpha_high, alpha_low;
-	ParamValue pv;
 
-	if (!SCPI_ParamInt32(context, &channel, TRUE)) {
+	if (!SCPI_ParamDouble(context, &ch, TRUE) ||
+		!SCPI_ParamDouble(context, &tc, TRUE)) {
 		return SCPI_RES_ERR;
 	}
-	if (!SCPI_ParamDouble(context, &param2, TRUE)) {
-		return SCPI_RES_ERR;
-	}
-	(void)channel;
 
-	tc = param2;
-	pv.type = PARAM_DOUBLE;
-	pv.value.d = param2;
 	get_alpha_to_reg(&alpha_high, &alpha_low, tc);
-
-	reg_write_by_name("demod1_alpha_l", (uint32_t)(alpha_low & 0xFFFFFFFF));
-	reg_write_by_name("demod1_alpha_m", (uint32_t)((alpha_low >> 32) & 0xFFFFFFFF));
-	reg_write_by_name("demod1_alpha_h", (uint32_t)(alpha_high & 0xFFFFFFFF));
-	set_param_by_name(PARAM_CURRENT, "demo_fir_tc_ch1", 1, pv);
-
+	reg_write_by_name("demod1_alpha_l", (uint32_t)alpha_low);
+	reg_write_by_name("demod1_alpha_m", (uint32_t)(alpha_low >> 32));
+	reg_write_by_name("demod1_alpha_h", (uint32_t)alpha_high);
+	reg_write_by_name("demod_bigwidth_write_en", 1);
+	reg_write_by_name("demod_bigwidth_write_en", 0);
+	set_param_by_name(PARAM_CURRENT, "demo_fir_tc_ch1", 1, (ParamValue){.type = PARAM_DOUBLE, .value.d = tc});
 	return SCPI_RES_OK;
 }
 
 static scpi_result_t zwdx_set_demo_sinc_enable(scpi_t *context)
 {
-	uint32_t enable;
-	uint32_t freq_l, freq_h;
-	uint64_t freq_word = 0;
-	uint32_t freq_in;
-	int32_t channel, param2;
-	uint32_t m1, m2, nm;
-	ParamValue pv;
+	double ch, enable;
+	uint32_t lo, hi, m1, m2, nm;
+	uint64_t word;
+	double osc_hz, pll_hz = 0, freq_hz;
+	char reg_name[64];
 
-	if (!SCPI_ParamInt32(context, &channel, TRUE)) {
+	if (!SCPI_ParamDouble(context, &ch, TRUE) ||
+		!SCPI_ParamDouble(context, &enable, TRUE)) {
 		return SCPI_RES_ERR;
 	}
-	if (!SCPI_ParamInt32(context, &param2, TRUE)) {
-		return SCPI_RES_ERR;
+
+	if (enable == 0) {
+		reg_write_by_name("demod1_sinc_en", 0);
+	set_param_by_name(PARAM_CURRENT, "demo_sinc_state_ch1", 1, (ParamValue){.type = PARAM_DOUBLE, .value.d = enable});
+		return SCPI_RES_OK;
 	}
-	(void)channel;
-
-	enable = param2;
-	pv.type = PARAM_INT32;
-	pv.value.i32 = param2;
-
-	if(g_param.g_demod_param[0].osc_source == EXT) {
-		reg_read_by_name("pll_freq_l", &freq_l);
-		reg_read_by_name("pll_freq_h", &freq_h);
-		freq_word = ((uint64_t)freq_h << 32) | ((uint64_t)freq_l);
-		freq_in = (uint32_t)(freq_word / pow(2, 48) * zwdx_oscillator_ref_clock_hz());
-	} else {
-		freq_in = (uint32_t)g_param.g_demod_param[0].osc_freq;
+	sprintf(reg_name, "osc%d_freq_word_l", g_param.g_demod_param[0].osc_index + 1);
+	if (reg_read_by_name(reg_name, &lo) != 0) return SCPI_RES_ERR;
+	sprintf(reg_name, "osc%d_freq_word_h", g_param.g_demod_param[0].osc_index + 1);
+	if (reg_read_by_name(reg_name, &hi) != 0) return SCPI_RES_ERR;
+	word = ((uint64_t)(hi & 0xFFFF) << 32) | lo;
+	osc_hz = (double)word / (double)((1ULL << 48) - 1) * OSC_SAMPLE_RATE;
+	if (g_param.g_demod_param[0].ref_mode != 0) {
+		if (reg_read_by_name("pll_freq_word_l", &lo) != 0 ||
+			reg_read_by_name("pll_freq_word_h", &hi) != 0) return SCPI_RES_ERR;
+		word = ((uint64_t)(hi & 0xFFFF) << 32) | lo;
+		pll_hz = (double)word / (double)((1ULL << 48) - 1) * PLL_SAMPLE_RATE;
 	}
-
-	sync_filter_params(freq_in, &m1, &m2, &nm);
-	printf("freq_word: %llu, freq_in: %u, %u, %u, %u\r\n", freq_word, freq_in, m1, m2, nm);
-
-	reg_write_by_name("demod1_sinc_en", enable);
+	freq_hz = g_param.g_demod_param[0].ref_mode == 0 ? osc_hz :
+		(g_param.g_demod_param[0].ref_mode == 1 ? pll_hz : fabs(pll_hz - osc_hz));
+	freq_hz *= g_param.g_demod_param[0].osc_harm;
+	if (freq_hz < 1 || freq_hz > UINT32_MAX ||
+		sync_filter_params((uint32_t)freq_hz, &m1, &m2, &nm) != 0) return SCPI_RES_ERR;
 	reg_write_by_name("demod1_sinc_dec_ratio_m1", m1);
 	reg_write_by_name("demod1_sinc_aver_ratio", nm);
 	reg_write_by_name("demod1_sinc_dec_ratio_m2", m2);
 	reg_write_by_name("demod1_sinc_dec_ratio_en", 1);
 	reg_write_by_name("demod1_sinc_dec_ratio_en", 0);
-	set_param_by_name(PARAM_CURRENT, "demo_sinc_state_ch1", 1, pv);
-
+	reg_write_by_name("demod1_sinc_en", 1);
+	set_param_by_name(PARAM_CURRENT, "demo_sinc_state_ch1", 1, (ParamValue){.type = PARAM_DOUBLE, .value.d = enable});
 	return SCPI_RES_OK;
 }
 
 static scpi_result_t zwdx_set_demo_scale(scpi_t *context)
 {
+	double ch, scale;
 	uint64_t code;
-	int32_t channel;
-	double  param2;
-	ParamValue pv;
 
-	if (!SCPI_ParamInt32(context, &channel, TRUE)) {
+	if (!SCPI_ParamDouble(context, &ch, TRUE) ||
+		!SCPI_ParamDouble(context, &scale, TRUE)) {
 		return SCPI_RES_ERR;
 	}
-	if (!SCPI_ParamDouble(context, &param2, TRUE)) {
-		return SCPI_RES_ERR;
-	}
-	(void)channel;
 
-	pv.type = PARAM_DOUBLE;
-	pv.value.d = param2;
-	code = (uint64_t)(param2 * pow(2, 32));
-	reg_write_by_name("demod1_psd_scaling_l", (uint32_t)(code & 0xFFFFFFFF));
-	reg_write_by_name("demod1_psd_scaling_h", (uint32_t)((code >> 32) & 0xFFFFFFFF));
-	set_param_by_name(PARAM_CURRENT, "demo_scale_ch1", 1, pv);
-
+	code = (uint64_t)(scale * (double)(1ULL << 32));
+	reg_write_by_name("demod1_psd_scaling_l", (uint32_t)code);
+	reg_write_by_name("demod1_psd_scaling_h", (uint32_t)(code >> 32));
+	reg_write_by_name("demod_bigwidth_write_en", 1);
+	reg_write_by_name("demod_bigwidth_write_en", 0);
+	set_param_by_name(PARAM_CURRENT, "demo_scale_ch1", 1, (ParamValue){.type = PARAM_DOUBLE, .value.d = scale});
 	return SCPI_RES_OK;
 }
 
@@ -2790,8 +2614,6 @@ static scpi_result_t zwdx_set_daq_sample_rate(scpi_t *context)
 {
 	uint32_t sample_rate_index;
 	uint32_t decimation_value;
-	double daq_input_rate_hz;
-	double target_sample_rate_hz;
 	int32_t param1;
 
 	if (!SCPI_ParamInt32(context, &param1, TRUE)) {
@@ -2803,14 +2625,15 @@ static scpi_result_t zwdx_set_daq_sample_rate(scpi_t *context)
 	pv.value.i32 = param1;
 
 	sample_rate_index = param1;
-	/* The host sends the combo-box index:
-	 *   index 0 -> 2 MHz, index 1 -> 1 MHz, index 2 -> 500 kHz, ...
-	 * M005M DAQ decimation starts from 40 MHz.
-	 * L500K has already decimated 40 MHz to 2 MHz before this stage.
+	if(sample_rate_index >= 31) {
+		return SCPI_RES_ERR;
+	}
+
+	/* Host sends the sample-rate combo-box index.
+	 * DAQ is divided from 125 MHz, and FPGA decimation value is 2^index:
+	 *   index 0 -> 125 MHz, index 1 -> 62.5 MHz, index 2 -> 31.25 MHz, ...
 	 */
-	daq_input_rate_hz = (get_device_model() == DEVICE_MODEL_L500K) ? 2000000.0 : 40000000.0;
-	target_sample_rate_hz = 2000000.0 / (1U << sample_rate_index);
-	decimation_value = (uint32_t)(daq_input_rate_hz / target_sample_rate_hz);
+	decimation_value = 1U << sample_rate_index;
 
 	reg_write_by_name("ch1_daq_decimation_value", decimation_value);
 	reg_write_by_name("ch2_daq_decimation_value", decimation_value);
@@ -2846,48 +2669,6 @@ static scpi_result_t zwdx_set_daq_data_source(scpi_t *context)
 	set_param_by_name(PARAM_CURRENT,"daq_source", 0, pv);
 
 	return SCPI_RES_OK;
-}
-
-static uint32_t trig_source_from_compact_m005m(int32_t param)
-{
-	uint32_t source = (uint32_t)param + TS_M005M_1_VOL;
-
-	if(source == TS_M005M_37_SIGNALOUT1_PHASE) {
-		return TS_M005M_40_TRIGIN1;
-	}
-	if(source == TS_M005M_38_SIGNALOUT2_PHASE) {
-		return TS_M005M_41_TRIGIN2;
-	}
-
-	return source;
-}
-
-static uint32_t trig_source_from_compact_l500k(int32_t param)
-{
-	uint32_t source = (uint32_t)param + TS_L500K_1_VOL;
-
-	if(source >= TS_L500K_49_SIGNALOUT1_PHASE &&
-	   source <= TS_L500K_52_TRIGIN1) {
-		return source + 3;
-	}
-
-	return source;
-}
-
-static uint32_t trig_source_from_compact_mfilab(int32_t param)
-{
-	uint32_t source = (uint32_t)param + TS_SIGNALIN1;
-
-	if(source >= TS_SIGNALOUT1_PHASE && source <= TS_TRIGIN1) {
-		return TS_TRIGIN1;
-	}
-
-	return source;
-}
-
-static uint32_t trig_source_from_compact_by_model(int32_t param)
-{
-	return trig_source_from_compact_mfilab(param);
 }
 
 static scpi_result_t zwdx_set_daq_run_en(scpi_t *context)
@@ -3042,7 +2823,16 @@ static scpi_result_t zwdx_set_scope_sample_rate(scpi_t *context)
 	pv.value.i32 = value;
 
 	sample_rate_index = value;
-	decimation_value = sample_rate_index; //0: 500MHz, 1:125MHz/1,  2:125MHz/2 , 3:125MHz/4...
+	if(sample_rate_index >= 31) {
+		return SCPI_RES_ERR;
+	}
+
+	/* Scope sample-rate index:
+	 *   index 0 -> 500 MHz raw path, write 0 directly.
+	 *   index 1 -> 125 MHz / 2, index 2 -> 125 MHz / 4,
+	 *   index 3 -> 125 MHz / 8, ...
+	 */
+	decimation_value = (sample_rate_index == 0) ? 0 : (1U << sample_rate_index);
 
 	if(channel == CH1) {
 		reg_write_by_name("ch1_scope_decimation_value", decimation_value);
@@ -3081,12 +2871,13 @@ static scpi_result_t zwdx_set_scope_data_source(scpi_t *context)
 
 	if(param1 == CH1) {
 		reg_write_by_name("ch1_scope_up_data_mux", source);
+		g_param.g_scope_source[0] = (ScopeDataSource)param2;
 		set_param_by_name(PARAM_CURRENT,"scope_source_ch1", 1, pv);
 	}else if(param1 == CH2) {
 		reg_write_by_name("ch2_scope_up_data_mux", source);
+		g_param.g_scope_source[1] = (ScopeDataSource)param2;
 		set_param_by_name(PARAM_CURRENT,"scope_source_ch2", 1, pv);
 	}
-	g_param.g_scope_source = param2;
 
 	return SCPI_RES_OK;
 }
@@ -3194,7 +2985,6 @@ void set_scope_sample_number()
 static scpi_result_t zwdx_set_pwa_signal_en(scpi_t *context)
 {
 	int32_t param1;
-	uint32_t so_phase_trig_source;
 
 	if (!SCPI_ParamInt32(context, &param1, TRUE)) {
 		return SCPI_RES_ERR;
@@ -3204,20 +2994,14 @@ static scpi_result_t zwdx_set_pwa_signal_en(scpi_t *context)
 	pv.type = PARAM_INT32;
 	pv.value.i32 = param1;
 
-	if(g_device_model == DEVICE_MODEL_M005M
-		|| g_device_model == DEVICE_MODEL_M005M_VV
-		|| g_device_model == DEVICE_MODEL_M005M_VI) {
-		so_phase_trig_source = TS_M005M_37_SIGNALOUT1_PHASE;
-	}else if(g_device_model == DEVICE_MODEL_L500K) {
-		so_phase_trig_source = TS_L500K_49_SIGNALOUT1_PHASE;
-	}
-
-	reg_write_by_name("trig_source", so_phase_trig_source);
+	reg_write_by_name("trig_source", TS_SCOPE_PHASE);
 
 	reg_write_by_name("hysteresis_range_high_l", 0);
 	reg_write_by_name("hysteresis_range_high_h", 0x3FFFFFFF);
 	reg_write_by_name("hysteresis_range_low_l", 0);
 	reg_write_by_name("hysteresis_range_low_h", 0x3BFFFFFF);
+	reg_write_by_name("trig_bigwidth_write_en", 1);
+	reg_write_by_name("trig_bigwidth_write_en", 0);
 
 	set_param_by_name(PARAM_CURRENT,"pwa_signal", 0, pv);
 
@@ -3242,7 +3026,7 @@ static scpi_result_t zwdx_set_trig_sample_len(scpi_t *context)
 	return SCPI_RES_OK;
 }
 
-static scpi_result_t zwdx_set_trig_times(scpi_t *context)
+static scpi_result_t zwdx_set_trig_holdoff_count(scpi_t *context)
 {
 	uint32_t trigcnt;
 	int32_t param1;
@@ -3259,7 +3043,7 @@ static scpi_result_t zwdx_set_trig_times(scpi_t *context)
 	reg_write_by_name("ch1_storag_cnt", trigcnt);
 	reg_write_by_name("ch2_storag_cnt", trigcnt);
 
-	set_param_by_name(PARAM_CURRENT,"trig_times", 0, pv);
+	set_param_by_name(PARAM_CURRENT,"trig_holdoff_count", 0, pv);
 
 
 	return SCPI_RES_OK;
@@ -3282,11 +3066,24 @@ static scpi_result_t zwdx_set_trig_source(scpi_t *context)
 	pv.type = PARAM_INT32;
 	pv.value.i32 = param1;
 
-	trigsource = trig_source_from_compact_by_model(param1);
+	trigsource = (uint32_t)param1;
 
 	reg_write_by_name("trig_source", trigsource);
 	set_param_by_name(PARAM_CURRENT,"trig_source", 0, pv);
 
+	return SCPI_RES_OK;
+}
+
+static scpi_result_t zwdx_set_trig_mode(scpi_t *context)
+{
+	double mode;
+
+	if (!SCPI_ParamDouble(context, &mode, TRUE) || (mode != 0 && mode != 1)) {
+		return SCPI_RES_ERR;
+	}
+	//0：NORMAL 1：AUTO
+	/* Software acquisition policy, not the FPGA trig_mode edge/pulse register. */
+	set_param_by_name(PARAM_CURRENT, "trig_mode", 0, (ParamValue){.type = PARAM_DOUBLE, .value.d = mode});
 	return SCPI_RES_OK;
 }
 
@@ -3309,8 +3106,6 @@ static scpi_result_t zwdx_set_trig_type(scpi_t *context)
 	return SCPI_RES_OK;
 }
 
-static int physical_value_to_raw_code_by_trig_source(int trig_source, double value, int64_t *raw_code);
-
 static int write_trig_level_window(double level, double hyst)
 {
 	ParamValue getpv;
@@ -3327,17 +3122,17 @@ static int write_trig_level_window(double level, double hyst)
 		return -1;
 	}
 
-	trig_source = trig_source_from_compact_by_model(getpv.value.i32);
+	trig_source = getpv.value.i32;
 	get_global_param(&glp);
 	get_cv_maptable(&cvmt);
 	if(glp == NULL || cvmt == NULL) {
 		return -1;
 	}
 
-	if(trig_source == TS_SIGNALIN1) {
+	if(trig_source == TS_SCOPE_IN1) {
 		range = cvmt->voltage1[glp->g_siginput_config[0].range - 1].range;
 		scale = cvmt->voltage1[glp->g_siginput_config[0].range - 1].R1;
-	} else if(trig_source == TS_SIGNALIN2) {
+	} else if(trig_source == TS_SCOPE_IN2) {
 		range = cvmt->voltage1[glp->g_siginput_config[1].range - 1].range;
 		scale = cvmt->voltage1[glp->g_siginput_config[1].range - 1].R1;
 	} else {
@@ -3360,6 +3155,9 @@ static int write_trig_level_window(double level, double hyst)
 	reg_write_by_name("hysteresis_range_high_h", (max_bits >> 32) & 0xFFFFFFFF);
 	reg_write_by_name("hysteresis_range_low_l", min_bits & 0xFFFFFFFF);
 	reg_write_by_name("hysteresis_range_low_h", (min_bits >> 32) & 0xFFFFFFFF);
+	/* Commit the upper/lower 64-bit thresholds together. */
+	reg_write_by_name("trig_bigwidth_write_en", 1);
+	reg_write_by_name("trig_bigwidth_write_en", 0);
 	return 0;
 }
 
@@ -3409,7 +3207,7 @@ static scpi_result_t zwdx_set_trig_hyst(scpi_t *context)
 	return SCPI_RES_OK;
 }
 
-static scpi_result_t zwdx_set_trig_holdoff(scpi_t *context)
+static scpi_result_t zwdx_set_trig_holdoff_time(scpi_t *context)
 {
 	uint32_t hold;
 	double param1;
@@ -3424,7 +3222,7 @@ static scpi_result_t zwdx_set_trig_holdoff(scpi_t *context)
 	hold = param1;
 
 	reg_write_by_name("trig_release_restrain", hold);
-	set_param_by_name(PARAM_CURRENT,"trig_hold_off", 0, pv);
+	set_param_by_name(PARAM_CURRENT,"trig_holdoff_time", 0, pv);
 
 
 	return SCPI_RES_OK;
@@ -3488,114 +3286,133 @@ static scpi_result_t zwdx_set_trig_force(scpi_t *context)
 	return SCPI_RES_OK;
 }
 
-static const char *pid_p_l_regs[] = {"pid1_Kp_l", "pid2_Kp_l", "pid3_Kp_l", "pid4_Kp_l"};
-static const char *pid_p_h_regs[] = {"pid1_Kp_h", "pid2_Kp_h", "pid3_Kp_h", "pid4_Kp_h"};
-static const char *pid_i_l_regs[] = {"pid1_Ki_l", "pid2_Ki_l", "pid3_Ki_l", "pid4_Ki_l"};
-static const char *pid_i_h_regs[] = {"pid1_Ki_h", "pid2_Ki_h", "pid3_Ki_h", "pid4_Ki_h"};
-static const char *pid_d_l_regs[] = {"pid1_Kd_l", "pid2_Kd_l", "pid3_Kd_l", "pid4_Kd_l"};
-static const char *pid_d_h_regs[] = {"pid1_Kd_h", "pid2_Kd_h", "pid3_Kd_h", "pid4_Kd_h"};
-static const char *pid_setpoint_l_regs[] = {"pid1_set_point_l", "pid2_set_point_l", "pid3_set_point_l", "pid4_set_point_l"};
-static const char *pid_setpoint_h_regs[] = {"pid1_set_point_h", "pid2_set_point_h", "pid3_set_point_h", "pid4_set_point_h"};
-static const char *pid_normalization_l_regs[] = {"pid1_normaliztion_v_l", "pid2_normaliztion_v_l", "pid3_normaliztion_v_l", "pid4_normaliztion_v_l"};
-static const char *pid_normalization_h_regs[] = {"pid1_normaliztion_v_h", "pid2_normaliztion_v_h", "pid3_normaliztion_v_h", "pid4_normaliztion_v_h"};
-static const char *pid_enable_regs[] = {"pid1_enable", "pid2_enable", "pid3_enable", "pid4_enable"};
-static const char *pid_ki_enable_regs[] = {"pid1_ki_enable", "pid2_ki_enable", "pid3_ki_enable", "pid4_ki_enable"};
-static const char *pid_filter_regs[] = {"pid1_moving_aver_ratio", "pid2_moving_aver_ratio", "pid3_moving_aver_ratio", "pid4_moving_aver_ratio"};
-static const char *pid_source_regs[] = {"pid1_source", "pid2_source", "pid3_source", "pid4_source"};
-static const char *pid_dec_regs[] = {"pid1_decimation", "pid2_decimation", "pid3_decimation", "pid4_decimation"};
-static const char *pid_invert_regs[] = {"pid1_invert", "pid2_invert", "pid3_invert", "pid4_invert"};
-
-static const char *pid_p_param_names[] = {"pid_p_ch1", "pid_p_ch2", "pid_p_ch3", "pid_p_ch4"};
-static const char *pid_i_param_names[] = {"pid_i_ch1", "pid_i_ch2", "pid_i_ch3", "pid_i_ch4"};
-static const char *pid_d_param_names[] = {"pid_d_ch1", "pid_d_ch2", "pid_d_ch3", "pid_d_ch4"};
-static const char *pid_setpoint_param_names[] = {"pid_setpoint_ch1", "pid_setpoint_ch2", "pid_setpoint_ch3", "pid_setpoint_ch4"};
-static const char *pid_enable_param_names[] = {"pid_enable_ch1", "pid_enable_ch2", "pid_enable_ch3", "pid_enable_ch4"};
-static const char *pid_ki_enable_param_names[] = {"pid_ki_en_ch1", "pid_ki_en_ch2", "pid_ki_en_ch3", "pid_ki_en_ch4"};
-static const char *pid_filter_param_names[] = {"pid_filter_ch1", "pid_filter_ch2", "pid_filter_ch3", "pid_filter_ch4"};
-static const char *pid_source_param_names[] = {"pid_source_ch1", "pid_source_ch2", "pid_source_ch3", "pid_source_ch4"};
-static const char *pid_dec_param_names[] = {"pid_dec_ch1", "pid_dec_ch2", "pid_dec_ch3", "pid_dec_ch4"};
-static const char *pid_invert_param_names[] = {"pid_invert_ch1", "pid_invert_ch2", "pid_invert_ch3", "pid_invert_ch4"};
-
-static scpi_result_t zwdx_set_pid_gain(scpi_t *context, const char **low_regs, const char **high_regs, const char **param_names)
-{
-	int32_t channel;
-	double value;
-	uint64_t code;
-	ParamValue pv;
-	int index;
-
-	if (!SCPI_ParamInt32(context, &channel, TRUE)) {
-		return SCPI_RES_ERR;
-	}
-	if (!SCPI_ParamDouble(context, &value, TRUE)) {
-		return SCPI_RES_ERR;
-	}
-	if(channel < CH1 || channel > CH4) {
-		return SCPI_Error(context, SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
-	}
-
-	pv.type = PARAM_DOUBLE;
-	pv.value.d = value;
-	code = (uint64_t)(value * (double)(1ULL << 48));
-	index = channel - 1;
-
-	reg_write_by_name(low_regs[index], (uint32_t)(code & 0xFFFFFFFF));
-	reg_write_by_name(high_regs[index], (uint32_t)((code >> 32) & 0xFFFFFFFF));
-	set_param_by_name(PARAM_CURRENT, param_names[index], 1, pv);
-
-	return SCPI_RES_OK;
-}
-
-static scpi_result_t zwdx_set_pid_uint32(scpi_t *context, const char **regs, const char **param_names)
-{
-	int32_t channel;
-	double value;
-	ParamValue pv;
-	int index;
-
-	if (!SCPI_ParamInt32(context, &channel, TRUE)) {
-		return SCPI_RES_ERR;
-	}
-	if (!SCPI_ParamDouble(context, &value, TRUE)) {
-		return SCPI_RES_ERR;
-	}
-	if(channel < CH1 || channel > CH4) {
-		return SCPI_Error(context, SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
-	}
-
-	pv.type = PARAM_DOUBLE;
-	pv.value.d = value;
-	index = channel - 1;
-
-	reg_write_by_name(regs[index], (uint32_t)value);
-	set_param_by_name(PARAM_CURRENT, param_names[index], 1, pv);
-
-	return SCPI_RES_OK;
-}
-
 static scpi_result_t zwdx_set_pid_p(scpi_t *context)
 {
-	return zwdx_set_pid_gain(context, pid_p_l_regs, pid_p_h_regs, pid_p_param_names);
+	int32_t channel;
+	double value;
+	char reg_name[64], param_name[64];
+	uint64_t code;
+
+	if (!SCPI_ParamInt32(context, &channel, TRUE) ||
+		!SCPI_ParamDouble(context, &value, TRUE)) {
+		return SCPI_RES_ERR;
+	}
+	if(channel < CH1 || channel > CH4) {
+		return SCPI_Error(context, SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
+	}
+
+	code = (uint64_t)(value * (double)(1ULL << 48));
+	P_LOG_DEBUG("zwdx_set_pid_p: channel=%d, value=%.6f, code=0x%016llx\r\n", channel, value, (unsigned long long)code);
+	sprintf(reg_name, "pid%d_Kp_l", channel);
+	reg_write_by_name(reg_name, (uint32_t)code);
+	sprintf(reg_name, "pid%d_Kp_h", channel);
+	reg_write_by_name(reg_name, (uint32_t)(code >> 32));
+	sprintf(reg_name, "pid%d_bigwidth_write_en", channel);
+	reg_write_by_name(reg_name, 1);
+	reg_write_by_name(reg_name, 0);
+	sprintf(param_name, "pid_p_ch%d", channel);
+	set_param_by_name(PARAM_CURRENT, param_name, 1, (ParamValue){.type = PARAM_DOUBLE, .value.d = value});
+	return SCPI_RES_OK;
 }
 
 static scpi_result_t zwdx_set_pid_i(scpi_t *context)
 {
-	return zwdx_set_pid_gain(context, pid_i_l_regs, pid_i_h_regs, pid_i_param_names);
+	int32_t channel;
+	double value;
+	char reg_name[64], param_name[64];
+	uint64_t code;
+
+	if (!SCPI_ParamInt32(context, &channel, TRUE) ||
+		!SCPI_ParamDouble(context, &value, TRUE)) {
+		return SCPI_RES_ERR;
+	}
+	if(channel < CH1 || channel > CH4) {
+		return SCPI_Error(context, SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
+	}
+
+	code = (uint64_t)(value * (double)(1ULL << 48));
+	P_LOG_DEBUG("zwdx_set_pid_i: channel=%d, value=%.6f, code=0x%016llx\r\n", channel, value, (unsigned long long)code);
+	sprintf(reg_name, "pid%d_Ki_l", channel);
+	reg_write_by_name(reg_name, (uint32_t)code);
+	sprintf(reg_name, "pid%d_Ki_h", channel);
+	reg_write_by_name(reg_name, (uint32_t)(code >> 32));
+	sprintf(reg_name, "pid%d_bigwidth_write_en", channel);
+	reg_write_by_name(reg_name, 1);
+	reg_write_by_name(reg_name, 0);
+	sprintf(param_name, "pid_i_ch%d", channel);
+	set_param_by_name(PARAM_CURRENT, param_name, 1, (ParamValue){.type = PARAM_DOUBLE, .value.d = value});
+	return SCPI_RES_OK;
 }
 
 static scpi_result_t zwdx_set_pid_d(scpi_t *context)
 {
-	return zwdx_set_pid_gain(context, pid_d_l_regs, pid_d_h_regs, pid_d_param_names);
+	int32_t channel;
+	double value;
+	char reg_name[64], param_name[64];
+	uint64_t code;
+
+	if (!SCPI_ParamInt32(context, &channel, TRUE) ||
+		!SCPI_ParamDouble(context, &value, TRUE)) {
+		return SCPI_RES_ERR;
+	}
+	if(channel < CH1 || channel > CH4) {
+		return SCPI_Error(context, SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
+	}
+
+	code = (uint64_t)(value * (double)(1ULL << 48));
+	P_LOG_DEBUG("zwdx_set_pid_d: channel=%d, value=%.6f, code=0x%016llx\r\n", channel, value, (unsigned long long)code);
+	sprintf(reg_name, "pid%d_Kd_l", channel);
+	reg_write_by_name(reg_name, (uint32_t)code);
+	sprintf(reg_name, "pid%d_Kd_h", channel);
+	reg_write_by_name(reg_name, (uint32_t)(code >> 32));
+	sprintf(reg_name, "pid%d_bigwidth_write_en", channel);
+	reg_write_by_name(reg_name, 1);
+	reg_write_by_name(reg_name, 0);
+	sprintf(param_name, "pid_d_ch%d", channel);
+	set_param_by_name(PARAM_CURRENT, param_name, 1, (ParamValue){.type = PARAM_DOUBLE, .value.d = value});
+	return SCPI_RES_OK;
 }
 
 static scpi_result_t zwdx_set_pid_ki_en(scpi_t *context)
 {
-	return zwdx_set_pid_uint32(context, pid_ki_enable_regs, pid_ki_enable_param_names);
+	int32_t channel;
+	double value;
+	char reg_name[64], param_name[64];
+
+	if (!SCPI_ParamInt32(context, &channel, TRUE) ||
+		!SCPI_ParamDouble(context, &value, TRUE)) {
+		return SCPI_RES_ERR;
+	}
+	if(channel < CH1 || channel > CH4) {
+		return SCPI_Error(context, SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
+	}
+
+	sprintf(reg_name, "pid%d_ki_enable", channel);
+	reg_write_by_name(reg_name, (uint32_t)value);
+	sprintf(param_name, "pid_ki_en_ch%d", channel);
+	set_param_by_name(PARAM_CURRENT, param_name, 1, (ParamValue){.type = PARAM_DOUBLE, .value.d = value});
+	return SCPI_RES_OK;
 }
 
 static scpi_result_t zwdx_set_pid_filter(scpi_t *context)
 {
-	return zwdx_set_pid_uint32(context, pid_filter_regs, pid_filter_param_names);
+	int32_t channel;
+	double value;
+	char reg_name[64], param_name[64];
+
+	if (!SCPI_ParamInt32(context, &channel, TRUE) ||
+		!SCPI_ParamDouble(context, &value, TRUE)) {
+		return SCPI_RES_ERR;
+	}
+	if(channel < CH1 || channel > CH4) {
+		return SCPI_Error(context, SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
+	}
+
+	sprintf(reg_name, "pid%d_moving_aver_ratio", channel);
+	reg_write_by_name(reg_name, (uint32_t)value);
+	sprintf(param_name, "pid_filter_ch%d", channel);
+	set_param_by_name(PARAM_CURRENT, param_name, 1, (ParamValue){.type = PARAM_DOUBLE, .value.d = value});
+	return SCPI_RES_OK;
 }
 
 static int64_t round_to_i64(double value)
@@ -3701,219 +3518,108 @@ static int raw_code_from_signal_input(int input_ch, double value, uint64_t scale
 	return 0;
 }
 
-static int trig_source_to_demod_component(int trig_source, int *demod_index, int *component)
-{
-	if(!demod_index || !component) {
-		return -1;
-	}
-
-	if(g_device_model == DEVICE_MODEL_L500K) {
-		if(trig_source >= TS_L500K_9_DEMODULATOR1X && trig_source <= TS_L500K_16_DEMODULATOR8X) {
-			*demod_index = trig_source - TS_L500K_9_DEMODULATOR1X;
-			*component = 0;
-			return 0;
-		}
-		if(trig_source >= TS_L500K_17_DEMODULATOR1Y && trig_source <= TS_L500K_24_DEMODULATOR8Y) {
-			*demod_index = trig_source - TS_L500K_17_DEMODULATOR1Y;
-			*component = 1;
-			return 0;
-		}
-		if(trig_source >= TS_L500K_25_DEMODULATOR1R && trig_source <= TS_L500K_32_DEMODULATOR8R) {
-			*demod_index = trig_source - TS_L500K_25_DEMODULATOR1R;
-			*component = 2;
-			return 0;
-		}
-		if(trig_source >= TS_L500K_33_DEMODULATOR1Q && trig_source <= TS_L500K_40_DEMODULATOR8Q) {
-			*demod_index = trig_source - TS_L500K_33_DEMODULATOR1Q;
-			*component = 3;
-			return 0;
-		}
-	} else if(g_device_model == DEVICE_MODEL_M005M) {
-		if(trig_source >= TS_M005M_7_DEMODULATOR1X && trig_source <= TS_M005M_12_DEMODULATOR6X) {
-			*demod_index = trig_source - TS_M005M_7_DEMODULATOR1X;
-			*component = 0;
-			return 0;
-		}
-		if(trig_source >= TS_M005M_13_DEMODULATOR1Y && trig_source <= TS_M005M_18_DEMODULATOR6Y) {
-			*demod_index = trig_source - TS_M005M_13_DEMODULATOR1Y;
-			*component = 1;
-			return 0;
-		}
-		if(trig_source >= TS_M005M_19_DEMODULATOR1R && trig_source <= TS_M005M_24_DEMODULATOR6R) {
-			*demod_index = trig_source - TS_M005M_19_DEMODULATOR1R;
-			*component = 2;
-			return 0;
-		}
-		if(trig_source >= TS_M005M_25_DEMODULATOR1Q && trig_source <= TS_M005M_30_DEMODULATOR6Q) {
-			*demod_index = trig_source - TS_M005M_25_DEMODULATOR1Q;
-			*component = 3;
-			return 0;
-		}
-	}
-
-	return -1;
-}
-
-static int raw_code_from_demod_source(int trig_source, double value, int64_t *raw_code)
-{
-	gLobalParam *glp = NULL;
-	const MapItem *map_item = NULL;
-	uint64_t scale;
-	int demod_count;
-	int demod_index;
-	int component;
-	int input_ch;
-
-	if(!raw_code) {
-		return -1;
-	}
-	if(trig_source_to_demod_component(trig_source, &demod_index, &component) != 0) {
-		return -1;
-	}
-
-	demod_count = (g_device_model == DEVICE_MODEL_L500K) ? DEVICE_DEMOD_NUM_L500K : DEVICE_DEMOD_NUM_M005M;
-	if(demod_index < 0 || demod_index >= demod_count) {
-		return -1;
-	}
-
-	if(component == 3) {
-		*raw_code = round_to_i64(value * (double)(1LL << 45) / 180.0);
-		return 0;
-	}
-
-	get_global_param(&glp);
-	if(!glp) {
-		return -1;
-	}
-	if(glp->g_demod_param[demod_index].source == DEMO_INPUT_CH1) {
-		input_ch = 0;
-	} else if(glp->g_demod_param[demod_index].source == DEMO_INPUT_CH2) {
-		input_ch = 1;
-	} else {
-		return -1;
-	}
-
-	if(get_signal_input_map_item(input_ch, &map_item) != 0 || !map_item || map_item->range == 0.0) {
-		return -1;
-	}
-
-	if(component == 0) {
-		scale = map_item->X;
-	} else if(component == 1) {
-		scale = map_item->Y;
-	} else {
-		scale = map_item->R;
-	}
-	if(scale == 0) {
-		return -1;
-	}
-
-	*raw_code = round_to_i64(value * (double)scale / map_item->range);
-	return 0;
-}
-
-/* Reverse the physical-value decoding used by datatask.c/load_double() and
- * load_double_swap32(). The input source is the complete trigger-source enum.
- * Unsupported digital or not-yet-defined sources return -1 and are left as reserved.
- */
-static int physical_value_to_raw_code_by_trig_source(int trig_source, double value, int64_t *raw_code)
-{
-	const MapItem *map_item = NULL;
-
-	if(!raw_code) {
-		return -1;
-	}
-
-	if(g_device_model == DEVICE_MODEL_L500K) {
-		if(trig_source == TS_L500K_1_VOL || trig_source == TS_L500K_2_VOLCUR) {
-			if(get_signal_input_map_item(trig_source - TS_L500K_1_VOL, &map_item) != 0 || !map_item) {
-				return -1;
-			}
-			return raw_code_from_signal_input(trig_source - TS_L500K_1_VOL, value, map_item->R1, raw_code);
-		}
-		if(trig_source >= TS_L500K_3_AUXIN1 && trig_source <= TS_L500K_6_AUXIN4) {
-			return raw_code_from_signed16_bipolar(value, 10.0, raw_code);
-		}
-		if(trig_source >= TS_L500K_7_REFIN1 && trig_source <= TS_L500K_8_REFIN2) {
-			return raw_code_from_signed16_bipolar(value, 2.5, raw_code);
-		}
-		if(raw_code_from_demod_source(trig_source, value, raw_code) == 0) {
-			return 0;
-		}
-	} else if(g_device_model == DEVICE_MODEL_M005M) {
-		if(trig_source == TS_M005M_1_VOL || trig_source == TS_M005M_2_VOLCUR) {
-			if(get_signal_input_map_item(trig_source - TS_M005M_1_VOL, &map_item) != 0 || !map_item) {
-				return -1;
-			}
-			return raw_code_from_signal_input(trig_source - TS_M005M_1_VOL, value, map_item->R1, raw_code);
-		}
-		if(trig_source >= TS_M005M_3_AUXIN1 && trig_source <= TS_M005M_6_AUXIN4) {
-			return raw_code_from_aux_offset_20bit(value, raw_code);
-		}
-		if(raw_code_from_demod_source(trig_source, value, raw_code) == 0) {
-			return 0;
-		}
-	}
-
-	return -1;
-}
-
 static scpi_result_t zwdx_set_pid_setpoint(scpi_t *context)
 {
 	int32_t channel;
 	double value;
-	uint64_t setpoint;
-	uint64_t normaliztion;
-	ParamValue pv;
-	int index;
+	char param_name[64];
 
-	if (!SCPI_ParamInt32(context, &channel, TRUE)) {
-		return SCPI_RES_ERR;
-	}
-	if (!SCPI_ParamDouble(context, &value, TRUE)) {
+	if (!SCPI_ParamInt32(context, &channel, TRUE) ||
+		!SCPI_ParamDouble(context, &value, TRUE)) {
 		return SCPI_RES_ERR;
 	}
 	if(channel < CH1 || channel > CH4) {
 		return SCPI_Error(context, SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
 	}
 
-	pv.type = PARAM_DOUBLE;
-	pv.value.d = value;
-	index = channel - 1;
-
-	/* TODO: PID setpoint quantization depends on the selected source.
-	 * The new source table is not fixed yet, so this value is treated as raw code now.
-	 */
-	setpoint = (uint64_t)value;
-	normaliztion = 1;
-
-	reg_write_by_name(pid_setpoint_l_regs[index], (uint32_t)(setpoint & 0xFFFFFFFF));
-	reg_write_by_name(pid_setpoint_h_regs[index], (uint32_t)((setpoint >> 32) & 0xFFFFFFFF));
-	reg_write_by_name(pid_normalization_l_regs[index], (uint32_t)(normaliztion & 0xFFFFFFFF));
-	reg_write_by_name(pid_normalization_h_regs[index], (uint32_t)((normaliztion >> 32) & 0xFFFFFFFF));
-	set_param_by_name(PARAM_CURRENT, pid_setpoint_param_names[index], 1, pv);
-
+	/* The dependency sync thread converts and writes the target. */
+	sprintf(param_name, "pid_setpoint_ch%d", channel);
+	set_param_by_name(PARAM_CURRENT, param_name, 1, (ParamValue){.type = PARAM_DOUBLE, .value.d = value});
 	return SCPI_RES_OK;
 }
 
 static scpi_result_t zwdx_set_pid_dec(scpi_t *context)
 {
-	return zwdx_set_pid_uint32(context, pid_dec_regs, pid_dec_param_names);
+	int32_t channel;
+	double value;
+	char reg_name[64], param_name[64];
+
+	if (!SCPI_ParamInt32(context, &channel, TRUE) ||
+		!SCPI_ParamDouble(context, &value, TRUE)) {
+		return SCPI_RES_ERR;
+	}
+	if(channel < CH1 || channel > CH4) {
+		return SCPI_Error(context, SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
+	}
+
+	sprintf(reg_name, "pid%d_decimation", channel);
+	reg_write_by_name(reg_name, (uint32_t)value);
+	sprintf(param_name, "pid_dec_ch%d", channel);
+	set_param_by_name(PARAM_CURRENT, param_name, 1, (ParamValue){.type = PARAM_DOUBLE, .value.d = value});
+	return SCPI_RES_OK;
 }
 
 static scpi_result_t zwdx_set_pid_source(scpi_t *context)
 {
-	return zwdx_set_pid_uint32(context, pid_source_regs, pid_source_param_names);
+	int32_t channel;
+	double value;
+	char reg_name[64], param_name[64];
+
+	if (!SCPI_ParamInt32(context, &channel, TRUE) ||
+		!SCPI_ParamDouble(context, &value, TRUE)) {
+		return SCPI_RES_ERR;
+	}
+	if(channel < CH1 || channel > CH4) {
+		return SCPI_Error(context, SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
+	}
+
+	sprintf(reg_name, "pid%d_source", channel);
+	reg_write_by_name(reg_name, (uint32_t)value);
+	sprintf(param_name, "pid_source_ch%d", channel);
+	set_param_by_name(PARAM_CURRENT, param_name, 1, (ParamValue){.type = PARAM_DOUBLE, .value.d = value});
+	return SCPI_RES_OK;
 }
 
 static scpi_result_t zwdx_set_pid_enable(scpi_t *context)
 {
-	return zwdx_set_pid_uint32(context, pid_enable_regs, pid_enable_param_names);
+	int32_t channel;
+	double value;
+	char reg_name[64], param_name[64];
+
+	if (!SCPI_ParamInt32(context, &channel, TRUE) ||
+		!SCPI_ParamDouble(context, &value, TRUE)) {
+		return SCPI_RES_ERR;
+	}
+	if(channel < CH1 || channel > CH4) {
+		return SCPI_Error(context, SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
+	}
+
+	sprintf(reg_name, "pid%d_enable", channel);
+	reg_write_by_name(reg_name, (uint32_t)value);
+	sprintf(param_name, "pid_enable_ch%d", channel);
+	set_param_by_name(PARAM_CURRENT, param_name, 1, (ParamValue){.type = PARAM_DOUBLE, .value.d = value});
+	return SCPI_RES_OK;
 }
 
 static scpi_result_t zwdx_set_pid_invert(scpi_t *context)
 {
-	return zwdx_set_pid_uint32(context, pid_invert_regs, pid_invert_param_names);
+	int32_t channel;
+	double value;
+	char reg_name[64], param_name[64];
+
+	if (!SCPI_ParamInt32(context, &channel, TRUE) ||
+		!SCPI_ParamDouble(context, &value, TRUE)) {
+		return SCPI_RES_ERR;
+	}
+	if(channel < CH1 || channel > CH4) {
+		return SCPI_Error(context, SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
+	}
+
+	sprintf(reg_name, "pid%d_invert", channel);
+	reg_write_by_name(reg_name, (uint32_t)value);
+	sprintf(param_name, "pid_invert_ch%d", channel);
+	set_param_by_name(PARAM_CURRENT, param_name, 1, (ParamValue){.type = PARAM_DOUBLE, .value.d = value});
+	return SCPI_RES_OK;
 }
 
 static scpi_result_t zwdx_set_sweep_param(scpi_t *context)
@@ -5535,9 +5241,8 @@ void init_scpi_commands(void)
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":SYStem:DEFAULTPRE", .callback = zwdx_set_defaultpre,};
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":SYStem:NETWORK:STATIC:IP", .callback = zwdx_set_static_ip};
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":SYStem:NETWORK:DHCP:ENABLE", .callback = zwdx_set_dhcp_en};
-	/*ZW-LIA-DEVICE*/
+	/*MFILAB*/
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":DEVice:CLK:SOURCE", .callback = zwdx_set_dev_clk_source,};
-	scpi_commands[i++] = (scpi_command_t){.pattern = ":DEVice:CLK:EXTFREQ", .callback = zwdx_set_dev_clk_extfreq,};
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":DEVice:TRIG:SOURCE", .callback = zwdx_set_dev_trig_source,};
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":DEVice:CLK:LOCK?", .callback = zwdx_get_dev_clk_state,};
 	/*ZW-LIA-REFENCE*/
@@ -5546,19 +5251,18 @@ void init_scpi_commands(void)
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:REF:HYS:HIGH", .callback = zwdx_set_ref_sys_high,};
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:REF:HYS:LOW", .callback = zwdx_set_ref_sys_low};
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:REF:FILTER:WINDOWS", .callback = zwdx_set_ref_filter_win,};
-	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:REF:CALC:TIME", .callback = zwdx_set_ref_calc_time,};
-	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:REF:INTFILTER:WINDOWS", .callback = zwdx_set_ref_intfilter_win,};
+	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:REF:STAT:PERIOD", .callback = zwdx_set_ref_stat_period,};
+	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:REF:TIMEOUT", .callback = zwdx_set_ref_timeout,};
 	/*MFILAB SignalInput: voltage input only. User values are zero-based. */
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:SIGNALin:VOL:COUPING", .callback = scpi_set_si_vol_couping,};
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:SIGNALin:VOL:IMPEDANCE", .callback = scpi_set_si_vol_impedance,};
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:SIGNALin:VOL:RANGE", .callback = scpi_set_si_vol_range,};
 
+	/*MFILAB OSC: global OSC0-OSC7, independent from SignalOut. */
+	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:OSC:FREQ", .callback = scpi_set_osc_freq,};
+	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:OSC:SYNC", .callback = scpi_set_osc_sync,};
+
 	/*MFILAB SignalOutput: follows the SignalOut config register table. */
-	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:SIGNALout:OSC:ENABLE", .callback = scpi_set_so_osc_enable,};
-	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:SIGNALout:OSC:MODE", .callback = scpi_set_so_osc_mode,};
-	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:SIGNALout:OSC:RST", .callback = scpi_set_so_osc_rst,};
-	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:SIGNALout:OSC:PHASE", .callback = scpi_set_so_osc_phase,};
-	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:SIGNALout:OSC:FREQ", .callback = scpi_set_so_osc_freq,};
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:SIGNALout:ENABLE", .callback = scpi_set_so_enable,};
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:SIGNALout:SOURce1", .callback = scpi_set_so_source1,};
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:SIGNALout:SCALing1", .callback = scpi_set_so_scaling1,};
@@ -5568,21 +5272,19 @@ void init_scpi_commands(void)
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:SIGNALout:LIMit:UPPer", .callback = scpi_set_so_upper_limit,};
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:SIGNALout:LIMit:LOWer", .callback = scpi_set_so_lower_limit,};
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:SIGNALout:CONStant1", .callback = scpi_set_so_constant1,};
-	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:SIGNALout:OSC:TYPE", .callback = scpi_set_so_osc_type,};
-	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:SIGNALout:OSC:PLUSE:DUTY", .callback = scpi_set_so_osc_pluse_duty,};
-	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:SIGNALout:OSC:SCALing", .callback = scpi_set_so_osc_scaling,};
-	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:SIGNALout:ADD:OSC1:ENABLE", .callback = scpi_set_so_add_osc1_enable,};
-	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:SIGNALout:ADD:OSC2:ENABLE", .callback = scpi_set_so_add_osc2_enable,};
 
 	/*MFILAB Demod*/
+	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:DEMO:REF:SOURce", .callback = zwdx_set_demo_ref_source,};
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:DEMO:REF:MODE", .callback = zwdx_set_demo_ref_mode,};
-	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:DEMO:OSC:PHASEMODE", .callback = zwdx_set_demo_oscpmode,};
-	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:DEMO:OSC:RST", .callback = zwdx_set_demo_oscrst,};
-	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:DEMO:OSC:FREQ", .callback = zwdx_set_demo_oscfreq,};
+	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:DEMO:OSC:NUMBER", .callback = zwdx_set_demo_oscnumber,};
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:DEMO:OSC:PHASE", .callback = zwdx_set_demo_oscphase,};
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:DEMO:OSC:HARM", .callback = zwdx_set_demo_oscharm,};
+	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:DEMO:OSC:MODE", .callback = zwdx_set_demo_oscmode,};
+	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:DEMO:OSC:PULSE:DUTY", .callback = zwdx_set_demo_osc_pulse_duty,};
+	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:DEMO:OSC:AMP", .callback = zwdx_set_demo_oscamp,};
+	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:DEMO:OSC:AMP:ENABLE", .callback = zwdx_set_demo_oscampen,};
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:DEMO:ENABLE", .callback = zwdx_set_demo_enable,};
-	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:DEMO:SOURce", .callback = zwdx_set_demo_source,};
+	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:DEMO:DATA:SOURce", .callback = zwdx_set_demo_source,};
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:DEMO:FIR:ORDER", .callback = zwdx_set_demo_fir_order,};
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:DEMO:FIR:TC", .callback = zwdx_set_demo_fir_tc,};
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:DEMO:SINC:ENABLE", .callback = zwdx_set_demo_sinc_enable,};
@@ -5618,12 +5320,13 @@ void init_scpi_commands(void)
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:PWA:SIGNAL:ENABLE", .callback = zwdx_set_pwa_signal_en,};
 	/*TRIG*/
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:TRIG:SMPLEN", .callback = zwdx_set_trig_sample_len,};
-	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:TRIG:TIMES", .callback = zwdx_set_trig_times,};
+	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:TRIG:HOLDOFF:COUNT", .callback = zwdx_set_trig_holdoff_count,};
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:TRIG:SOURce", .callback = zwdx_set_trig_source,};
+	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:TRIG:MODE", .callback = zwdx_set_trig_mode,};
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:TRIG:TYPE", .callback = zwdx_set_trig_type,};
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:TRIG:LEVEL", .callback = zwdx_set_trig_level,};
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:TRIG:HYSteresis", .callback = zwdx_set_trig_hyst,};
-	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:TRIG:HOLDOFF", .callback = zwdx_set_trig_holdoff,};
+	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:TRIG:HOLDOFF:TIME", .callback = zwdx_set_trig_holdoff_time,};
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:TRIG:DELAY", .callback = zwdx_set_trig_delay,};
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:TRIG:PLUSE:WIDTH", .callback = zwdx_set_trig_pw,};
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:TRIG:FORCE", .callback = zwdx_set_trig_force,};
