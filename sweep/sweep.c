@@ -6,32 +6,25 @@
 #include "../pm/param.h"
 #include "../clk/reg.h"
 #include "../ring/ringbuffer.h"
+#include "../utils/scpi-def.h"
 
 
 ScanState  g_scan;
 ScanConfig g_cfg;
 
-extern double g_so_sineout_verify[5];
+#define SWEEP_PARAM_OSC_FREQ    0
+#define SWEEP_PARAM_OSC_AMP     1
+#define SWEEP_PARAM_DEMOD_PHASE 2
+#define SWEEP_DAQ_ARM_DELAY_US  20000
 
-#define SWEEP_PARAM_SO1_FREQ   0
-#define SWEEP_PARAM_SO1_SCALE  1
-#define SWEEP_PARAM_SO2_FREQ   2
-#define SWEEP_PARAM_SO2_SCALE  3
-#define SWEEP_DAQ_ARM_DELAY_US 10000
-
-static double signalout_range_voltage(int32_t range)
+static uint32_t sweep_get_settle_delay_us(void)
 {
-	static const double range_m005m[] = {0.01, 0.1, 1.0, 2.0, 10.0};
-	static const double range_l500k[] = {0.01, 0.1, 1.0, 3.0, 10.0};
-
-	if (range < 0) range = 0;
-	if (range > 4) range = 4;
-
-	if (get_device_model() == DEVICE_MODEL_L500K) {
-		return range_l500k[range];
+	ParamValue pv;
+	if(get_param_by_name(PARAM_CURRENT, "sweep_interval", 0, &pv) != 0 ||
+	   !(pv.value.d >= 0.001 && pv.value.d <= 3600.0)) {
+		return 1000;
 	}
-
-	return range_m005m[range];
+	return (uint32_t)(pv.value.d * 1000000.0);
 }
 
 void send_soft_trig()
@@ -132,86 +125,74 @@ static void scan_init_from_cfg(void)
     reg_write_by_name("trig_source", TS_SOFTWARE);
 }
 
+/* type 0: OSC frequency (Hz), target 0-7 -> OSC0-OSC7.
+ * type 1: OSC amplitude (Vp), target 0-15 -> OSC0/OUT1, OSC0/OUT2, ... OSC7/OUT2.
+ * type 2: oscillator phase (degrees), target 0-7 -> demo_osc_phase_ch1-ch8.
+ */
 void output_value(double value)
 {
-	ParamValue getpv;
-	ParamValue setpv;
-	int output_signal;
-	double temp;
-	uint64_t freq;
-	uint64_t codevalue;
-	int32_t range;
-	double range_voltage;
-	double scale;
+	ParamValue pv;
+	int type, target, osc, out_ch;
+	uint64_t code;
+	char reg_name[64], param_name[64];
 
-	get_param_by_name(PARAM_CURRENT,"sweep_param", 0, &getpv);
-	output_signal = (int)(getpv.value.d + 0.5);
+	if(get_param_by_name(PARAM_CURRENT, "sweep_param", 0, &pv) != 0) return;
+	type = (int)pv.value.d;
+	if(get_param_by_name(PARAM_CURRENT, "sweep_param", 1, &pv) != 0) return;
+	target = (int)pv.value.d;
+	if(!isfinite(value)) return;
 
-	setpv.type = PARAM_DOUBLE;
-	setpv.value.d = value;
+	switch(type) {
+	case SWEEP_PARAM_OSC_FREQ:
+		if(target < 0 || target > 7) return;
+		if(value < 0.0) value = 0.0;
+		if(value >= OSC_SAMPLE_RATE) return;
+		osc = target + 1;
+		code = (uint64_t)(value * (double)((1ULL << 48) - 1) / OSC_SAMPLE_RATE);
+		sprintf(reg_name, "oscillators%d_freq_word_l", osc);
+		reg_write_by_name(reg_name, (uint32_t)code);
+		sprintf(reg_name, "oscillators%d_freq_word_h", osc);
+		reg_write_by_name(reg_name, (uint32_t)((code >> 32) & 0xFFFF));
+		sprintf(reg_name, "oscillators%d_freq_en", osc);
+		reg_write_by_name(reg_name, 1);
+		reg_write_by_name(reg_name, 0);
+		reg_write_by_name("soft_trig", 0);
+		reg_write_by_name("soft_trig", 1);
+		reg_write_by_name("soft_trig", 0);
+		sprintf(param_name, "osc%d_freq", target);
+		set_param_by_name(PARAM_CURRENT, param_name, 1, (ParamValue){.type = PARAM_DOUBLE, .value.d = value});
+		break;
 
-	switch(output_signal) {
-	case SWEEP_PARAM_SO1_FREQ:
-		if (value < 0.0) {
-			value = 0.0;
-			setpv.value.d = value;
-		}
-		temp = value * pow(2, 48) / 500000000.0;
-		freq = (uint64_t)temp;
-		reg_write_by_name("oscillators2_freq_word_l", (uint32_t)(freq & 0xFFFFFFFF));
-		reg_write_by_name("oscillators2_freq_word_h", (uint32_t)((freq >> 32) & 0xFFFFFFFF));
-		reg_write_by_name("oscillators2_en", 1);
-		set_param_by_name(PARAM_CURRENT,"osc1_freq", 1, setpv);
+	case SWEEP_PARAM_OSC_AMP:
+		if(target < 0 || target > 15) return;
+		if(value < 0.0) value = 0.0;
+		if(value > 2.0) return;
+		osc = target / 2 + 1;
+		out_ch = target % 2 + 1;
+		/* Same Vp conversion as zwdx_set_demo_oscamp(), fixed +/-2 V output. */
+		code = (uint32_t)(value / 2.0 * (double)((1UL << 16) - 1));
+		sprintf(reg_name, "oscillators%d_sinout%d_scaling1", osc, out_ch);
+		reg_write_by_name(reg_name, (uint32_t)code);
+		sprintf(param_name, "demo_osc_amp_ch%d_out%d", osc, out_ch);
+		set_param_by_name(PARAM_CURRENT, param_name, 2, (ParamValue){.type = PARAM_DOUBLE, .value.d = value});
 		break;
-	case SWEEP_PARAM_SO1_SCALE:
-		if (value < 0.0) {
-			value = 0.0;
-		}
-		get_param_by_name(PARAM_CURRENT,"so_range_ch1", 1, &getpv);
-		range = getpv.value.i32;
-		if (range < 0) range = 0;
-		if (range > 4) range = 4;
-		range_voltage = signalout_range_voltage(range);
-		scale = value / (g_so_sineout_verify[range] * range_voltage);
-		setpv.value.d = scale;
-		temp = scale * g_so_sineout_verify[range];
-		codevalue = temp * (1ULL << 32);
-		reg_write_by_name("signalout1_scaling1_l", (uint32_t)(codevalue & 0xFFFFFFFF));
-		reg_write_by_name("signalout1_scaling1_h", (uint32_t)((codevalue >> 32) & 0xFFFFFFFF));
-		reg_write_by_name("signalout1_bigwidth_write_en", 1);
-		reg_write_by_name("signalout1_bigwidth_write_en", 0);
-		set_param_by_name(PARAM_CURRENT,"so_scaling1_ch1", 1, setpv);
-		break;
-	case SWEEP_PARAM_SO2_FREQ:
-		if (value < 0.0) {
-			value = 0.0;
-			setpv.value.d = value;
-		}
-		temp = value * pow(2, 48) / 500000000.0;
-		freq = (uint64_t)temp;
-		reg_write_by_name("oscillators3_freq_word_l", (uint32_t)(freq & 0xFFFFFFFF));
-		reg_write_by_name("oscillators3_freq_word_h", (uint32_t)((freq >> 32) & 0xFFFFFFFF));
-		reg_write_by_name("oscillators3_en", 1);
-		set_param_by_name(PARAM_CURRENT,"osc2_freq", 1, setpv);
-		break;
-	case SWEEP_PARAM_SO2_SCALE:
-		if (value < 0.0) {
-			value = 0.0;
-		}
-		get_param_by_name(PARAM_CURRENT,"so_range_ch2", 1, &getpv);
-		range = getpv.value.i32;
-		if (range < 0) range = 0;
-		if (range > 4) range = 4;
-		range_voltage = signalout_range_voltage(range);
-		scale = value / (g_so_sineout_verify[range] * range_voltage);
-		setpv.value.d = scale;
-		temp = scale * g_so_sineout_verify[range];
-		codevalue = temp * (1ULL << 32);
-		reg_write_by_name("signalout2_scaling1_l", (uint32_t)(codevalue & 0xFFFFFFFF));
-		reg_write_by_name("signalout2_scaling1_h", (uint32_t)((codevalue >> 32) & 0xFFFFFFFF));
-		reg_write_by_name("signalout2_bigwidth_write_en", 1);
-		reg_write_by_name("signalout2_bigwidth_write_en", 0);
-		set_param_by_name(PARAM_CURRENT,"so_scaling1_ch2", 1, setpv);
+
+	case SWEEP_PARAM_DEMOD_PHASE:
+		if(target < 0 || target > 7) return;
+		osc = target + 1;
+		/* Wrap the hardware phase, but save the original requested angle. */
+		double phase_deg = fmod(value, 360.0);
+		if(phase_deg < 0.0) phase_deg += 360.0;
+		code = (uint64_t)(phase_deg * (double)(1ULL << 48) / 360.0);
+		sprintf(reg_name, "oscillators%d_phase_l", osc);
+		reg_write_by_name(reg_name, (uint32_t)code);
+		sprintf(reg_name, "oscillators%d_phase_h", osc);
+		reg_write_by_name(reg_name, (uint32_t)((code >> 32) & 0xFFFF));
+		sprintf(reg_name, "oscillators%d_freq_en", osc);
+		reg_write_by_name(reg_name, 1);
+		reg_write_by_name(reg_name, 0);
+		sprintf(param_name, "demo_osc_phase_ch%d", osc);
+		set_param_by_name(PARAM_CURRENT, param_name, 1, (ParamValue){.type = PARAM_DOUBLE, .value.d = value});
 		break;
 	default:
 		return;
@@ -246,6 +227,9 @@ int scan_step_once(void)
 
 	//设置参数
 	output_value(g_scan.current);
+
+	/* Let the output settle before arming the acquisition. */
+	usleep(sweep_get_settle_delay_us());
 
     // 下面是原来的 DAQ SINGLE 采集逻辑
     daq_signal_state.type = PARAM_INT32;

@@ -434,7 +434,7 @@ void init()
 
 	pthread_create(&paramid, NULL, param_sync_thread, NULL);
 
-	// pthread_create(&scanid, NULL, &scan_thread, NULL);
+	pthread_create(&scanid, NULL, &scan_thread, NULL);
 
 	pthread_create(&hisliptid, NULL, hislip_service_thread, NULL);
 

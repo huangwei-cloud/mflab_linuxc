@@ -6,11 +6,12 @@
 #include <stdbool.h>
 #include <pthread.h>
 
-#define SAMPLE_POINT_MAX  (16384)
+#define SAMPLE_POINT_MAX  (65536)
 #define FRAME_SIZE        (SAMPLE_POINT_MAX * 8)
 
 #if defined(__aarch64__)
-	#define FRAME_COUNT   (200)
+	/* 65536 points x 8 bytes x 50 frames = 25 MiB per channel. */
+	#define FRAME_COUNT   (50)
 #elif defined(__arm__)
 	#define FRAME_COUNT   (10)
 #else

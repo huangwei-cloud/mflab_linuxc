@@ -1048,7 +1048,7 @@ void read_nbd_from_dma_to_ringbuff(uint32_t single_freame_size, int32_t ch_type)
 			printf("send data...\r\n");
 			//[4]write the filtered result frame into RingBuffer for automatic sending; split into frames if needed
 			single_freame_spoints = single_freame_size / 4; //total sample points in one acquisition frame
-			frame_int = single_freame_spoints / SAMPLE_POINT_MAX;      //RingBuffer frame maximum is 16384 double samples; write the acquisition frame in chunks
+			frame_int = single_freame_spoints / SAMPLE_POINT_MAX;      //Split acquisition data by the ring buffer frame capacity.
 			frame_remain = single_freame_spoints % SAMPLE_POINT_MAX;   //remaining sample count
 			for(i = 0; i < frame_int; i++) {
 				frame_buffer_write(frb+channel_list_l[0], channel_list_l[0], pff->filtered_frame + (i * SAMPLE_POINT_MAX), SAMPLE_POINT_MAX*8);

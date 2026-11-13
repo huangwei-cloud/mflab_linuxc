@@ -3624,17 +3624,32 @@ static scpi_result_t zwdx_set_pid_invert(scpi_t *context)
 
 static scpi_result_t zwdx_set_sweep_param(scpi_t *context)
 {
-	double  param1;
-	ParamValue pv;
+	double type, target;
 
-	if (!SCPI_ParamDouble(context, &param1, TRUE)) {
+	if (!SCPI_ParamDouble(context, &type, TRUE) ||
+		!SCPI_ParamDouble(context, &target, TRUE)) {
 		return SCPI_RES_ERR;
 	}
+	/* 0: frequency, 1: amplitude (Vp), 2: phase; target is zero-based. */
+	if(!isfinite(type) || type < 0 || type > 2 || type != (int)type ||
+	   !isfinite(target) || target < 0 || target > (type == 1 ? 15 : 7) || target != (int)target) {
+		return SCPI_RES_ERR;
+	}
+	set_param_by_name(PARAM_CURRENT, "sweep_param", 0, (ParamValue){.type = PARAM_DOUBLE, .value.d = type});
+	set_param_by_name(PARAM_CURRENT, "sweep_param", 1, (ParamValue){.type = PARAM_DOUBLE, .value.d = target});
 
-	pv.type = PARAM_DOUBLE;
-	pv.value.d = param1;
+	return SCPI_RES_OK;
+}
 
-	set_param_by_name(PARAM_CURRENT,"sweep_param", 0, pv);
+static scpi_result_t zwdx_set_sweep_interval(scpi_t *context)
+{
+	double seconds;
+	if(!SCPI_ParamDouble(context, &seconds, TRUE) ||
+	   !(seconds >= 0.001 && seconds <= 3600.0)) {
+		return SCPI_RES_ERR;
+	}
+	set_param_by_name(PARAM_CURRENT, "sweep_interval", 0,
+		(ParamValue){.type = PARAM_DOUBLE, .value.d = seconds});
 
 	return SCPI_RES_OK;
 }
@@ -5347,6 +5362,7 @@ void init_scpi_commands(void)
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:PID:ENABLE", .callback = zwdx_set_pid_enable,};
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:PID:INVERT", .callback = zwdx_set_pid_invert,};
 	/*SWEEP*/
+	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:SWEEP:INTERVAL", .callback = zwdx_set_sweep_interval,};
 	scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:SWEEP:PARAM",  			.callback = zwdx_set_sweep_param,};
     scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:SWEEP:START",         		.callback = zwdx_set_sweep_start,};
     scpi_commands[i++] = (scpi_command_t){.pattern = ":ZWLia:SWEEP:STOP",          		.callback = zwdx_set_sweep_stop,};
