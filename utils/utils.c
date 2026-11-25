@@ -7,13 +7,8 @@
 
 static long double get_filter_sample_rate_hz(void)
 {
-	if (get_device_model() == DEVICE_MODEL_L500K) {
-		return 2e6L;  // L500K: fs_base = 2 MHz, dn = 1.
-	}
-
-	return 40e6L / 10.0L;  // M005M: fs_base = 40 MHz, dn = 10.
+	return 1e9L / 16.0L;  // MFILAB: fs_base =1GHz, dn = 16.
 }
-
 
 /**
  * Compute FM synthesis coefficients up to the second order (J0/J1/J2); amplitudes include signs.
