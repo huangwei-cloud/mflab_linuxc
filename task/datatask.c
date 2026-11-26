@@ -25,8 +25,8 @@
 #define DMA_PACK_SIZE_DAQ 	(16384 * 8)
 #define DMA_PACK_SIZE_SCOPE (16384 * 4)
 #define SCOPE_FRAME_BYTE_MAX (16384 * 4)
-#define DATATASK_DMA_POLL_TIMEOUT_MS 100
-#define SCOPE_AUTO_TIMEOUT_MS 100  /* Wait for a normal frame before forcing a trigger. */
+#define DATATASK_DMA_POLL_TIMEOUT_MS 20
+#define SCOPE_AUTO_MARGIN_MS 50  /* 半帧预存完成后，再留 50 ms 等待正常触发。 */
 
 
 #define MIN(a, b) ((a) > (b) ? (b) : (a))
@@ -1217,18 +1217,29 @@ static int datatask_wait_dma_status(dma_status_wait_t *wait_ctx, int dma_index, 
  * Return 0: all selected DMA paths completed normally.
  * Return 1: at least one path was aborted by host stop/clear request.
  */
-static int datatask_wait_selected_dma(dma_status_wait_t *wait_ctx, int lowsrc_cnt, int highsrc_cnt, int mark_running, const char *abort_param_name)
+static int datatask_wait_selected_dma(dma_status_wait_t *wait_ctx, int lowsrc_cnt, int highsrc_cnt, int mark_running, const char *abort_param_name, int scope_frame_points)
 {
-	ParamValue mode = {0}, source = {0};
+	ParamValue rate = {0}, mode = {0};
+	struct timespec start, now;
+	double rate_hz;
+	long long auto_timeout_ms, elapsed_ms;
+	int pending, forced = 0, completed = 0, aborted = 0;
+	int poll_ret, i, fd, size;
+	char *buf;
 
-	/* AUTO applies only to Scope RUN; single capture and DAQ keep their existing behavior. */
+	/* 只有示波器连续运行（Scope RUN）使用下面的 AUTO 等待逻辑。 */
 	if(abort_param_name && strcmp(abort_param_name, "scope_run") == 0) {
-		struct timespec start, now;
-		int pending = (lowsrc_cnt ? 1 : 0) | (highsrc_cnt ? 2 : 0);
-		int forced = 0, completed = 0;
-		int aborted = 0;
+		pending = (lowsrc_cnt ? 1 : 0) | (highsrc_cnt ? 2 : 0);
 
-		/* A new timer for this armed frame only. The previous frame was already read. */
+		/* 上位机给两路设置相同的采样率，统一读取 CH1 的索引。 */
+		get_param_by_name(PARAM_CURRENT, "scope_sample_ch1", 1, &rate);
+		/* 索引 0 用原始采样率，其余按 125 MSa/s / 2^索引 计算。 */
+		rate_hz = rate.value.i32 == 0 ? 500e6 : 125e6 / (1U << rate.value.i32);
+		/* FPGA 先预存半帧。将预存时间换算成毫秒，再加 50 ms。 */
+		auto_timeout_ms = (long long)ceil(scope_frame_points / 2.0 / rate_hz * 1000.0) +
+			SCOPE_AUTO_MARGIN_MS;
+
+		/* 上一帧已经读完，本帧启动采集后重新计时。 */
 		clock_gettime(CLOCK_MONOTONIC, &start);
 		g_running = mark_running;
 		while(pending) {
@@ -1236,13 +1247,13 @@ static int datatask_wait_selected_dma(dma_status_wait_t *wait_ctx, int lowsrc_cn
 				aborted = 1;
 				break;
 			}
-			int poll_ret = poll(wait_ctx->fdset, wait_ctx->nfds, DATATASK_DMA_POLL_TIMEOUT_MS);
+			poll_ret = poll(wait_ctx->fdset, wait_ctx->nfds, DATATASK_DMA_POLL_TIMEOUT_MS);
 			if(poll_ret < 0) continue;
-			for(int i = 0; i < 2; i++) {
+			for(i = 0; i < 2; i++) {
 				if((pending & (1 << i)) && (wait_ctx->fdset[i].revents & POLLPRI)) {
-					int fd = i == 0 ? wait_ctx->fd_ch1_status : wait_ctx->fd_ch2_status;
-					char *buf = i == 0 ? wait_ctx->rxbuff1 : wait_ctx->rxbuff2;
-					int size = i == 0 ? wait_ctx->rxbuff1_size : wait_ctx->rxbuff2_size;
+					fd = i == 0 ? wait_ctx->fd_ch1_status : wait_ctx->fd_ch2_status;
+					buf = i == 0 ? wait_ctx->rxbuff1 : wait_ctx->rxbuff2;
+					size = i == 0 ? wait_ctx->rxbuff1_size : wait_ctx->rxbuff2_size;
 					lseek(fd, 0, SEEK_SET);
 					read(fd, buf, size);
 					pending &= ~(1 << i);
@@ -1251,15 +1262,17 @@ static int datatask_wait_selected_dma(dma_status_wait_t *wait_ctx, int lowsrc_cn
 			}
 			if(!pending) break;
 			clock_gettime(CLOCK_MONOTONIC, &now);
-			long long elapsed_ms = (now.tv_sec - start.tv_sec) * 1000LL + (now.tv_nsec - start.tv_nsec) / 1000000;
-			/* Once either DMA finishes, a trigger has occurred: do not force the other path. */
+			elapsed_ms = ((now.tv_sec - start.tv_sec) * 1000000000LL +
+				(now.tv_nsec - start.tv_nsec)) / 1000000;
+			/* 任一路 DMA 完成就说明本帧已触发，继续等其余路径。AUTO 每帧最多发一次软触发。 */
 			if(!forced && !completed &&
-				elapsed_ms >= SCOPE_AUTO_TIMEOUT_MS &&
-				datatask_is_param_enabled(abort_param_name) &&
-				get_param_by_name(PARAM_CURRENT, "trig_mode", 0, &mode) == 0 && mode.value.d == 1 &&
-				get_param_by_name(PARAM_CURRENT, "trig_source", 0, &source) == 0) {
-				send_soft_trig();
-				forced = 1;
+				elapsed_ms >= auto_timeout_ms &&
+				datatask_is_param_enabled(abort_param_name)) {
+				get_param_by_name(PARAM_CURRENT, "trig_mode", 0, &mode);  /* 0：NORMAL 等正常触发；1：AUTO 超时后发软触发。 */
+				if(mode.value.d == 1) {
+					send_soft_trig();
+					forced = 1;
+				}
 			}
 		}
 		g_running = 0;
@@ -1424,7 +1437,7 @@ static int datatask_handle_daq_signal(dma_status_wait_t *wait_ctx)
 	datatask_prepare_daq_first_frame(lowsrc_cnt, highsrc_cnt, depth_l, depth_h);
 	datatask_printf("[%d]\r\n", 5);
 	datatask_pulse_upload_trigger();
-	if(datatask_wait_selected_dma(wait_ctx, lowsrc_cnt, highsrc_cnt, 0, "daq_signal")) {
+	if(datatask_wait_selected_dma(wait_ctx, lowsrc_cnt, highsrc_cnt, 0, "daq_signal", 0)) {
 		datatask_printf("DAQ single aborted by host stop\r\n");
 		datatask_clear_capture_paths();
 		set_param_by_name(PARAM_CURRENT,"daq_signal", 0, setpv);
@@ -1460,7 +1473,7 @@ static int datatask_handle_daq_run(dma_status_wait_t *wait_ctx, int *start_work_
 
 	datatask_printf("[%d]\r\n", 5);
     datatask_pulse_upload_trigger();
-    if(datatask_wait_selected_dma(wait_ctx, lowsrc_cnt, highsrc_cnt, 1, "daq_run")) {
+    if(datatask_wait_selected_dma(wait_ctx, lowsrc_cnt, highsrc_cnt, 1, "daq_run", 0)) {
         datatask_printf("DAQ run aborted by host stop\r\n");
         return 1;
     }
@@ -1502,7 +1515,7 @@ static int datatask_handle_scope_signal(dma_status_wait_t *wait_ctx)
 	datatask_prepare_scope_first_frame(lowsrc_cnt, highsrc_cnt, depth, 0);
 	datatask_printf("[%d]\r\n", 5);
 	datatask_pulse_upload_trigger();
-	if(datatask_wait_selected_dma(wait_ctx, lowsrc_cnt, highsrc_cnt, 0, "scope_signal")) {
+	if(datatask_wait_selected_dma(wait_ctx, lowsrc_cnt, highsrc_cnt, 0, "scope_signal", 0)) {
 		datatask_printf("Scope single aborted by host stop\r\n");
 		datatask_clear_capture_paths();
 		set_param_by_name(PARAM_CURRENT,"scope_signal", 0, setpv);
@@ -1546,7 +1559,7 @@ static int datatask_handle_scope_run(dma_status_wait_t *wait_ctx, int *start_wor
 
 	datatask_printf("[%d]\r\n", 5);
 	datatask_pulse_upload_trigger();
-	if(datatask_wait_selected_dma(wait_ctx, lowsrc_cnt, highsrc_cnt, 1, "scope_run")) {
+	if(datatask_wait_selected_dma(wait_ctx, lowsrc_cnt, highsrc_cnt, 1, "scope_run", data.value.i32)) {
 		datatask_printf("Scope run aborted by host stop\r\n");
 		datatask_clear_capture_paths();
 		*start_work_first = 1;
@@ -1591,7 +1604,7 @@ static int datatask_handle_pwa_signal(dma_status_wait_t *wait_ctx)
 	datatask_prepare_scope_first_frame(lowsrc_cnt, highsrc_cnt, depth, 1);
 	datatask_printf("[%d]\r\n", 5);
 	datatask_pulse_upload_trigger();
-	if(datatask_wait_selected_dma(wait_ctx, lowsrc_cnt, highsrc_cnt, 0, "pwa_signal")) {
+	if(datatask_wait_selected_dma(wait_ctx, lowsrc_cnt, highsrc_cnt, 0, "pwa_signal", 0)) {
 		datatask_printf("PWA single aborted by host stop\r\n");
 		trig_source_signal_reset();
 		datatask_clear_pwa_paths();

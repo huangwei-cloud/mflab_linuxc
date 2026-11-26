@@ -2810,6 +2810,7 @@ static scpi_result_t zwdx_set_scope_sample_rate(scpi_t *context)
 	uint32_t sample_rate_index;
 	uint32_t decimation_value;
 	int32_t channel, value;
+	ParamValue run_state = {0};
 
 	if (!SCPI_ParamInt32(context, &channel, TRUE)) {
 		return SCPI_RES_ERR;
@@ -2823,7 +2824,7 @@ static scpi_result_t zwdx_set_scope_sample_rate(scpi_t *context)
 	pv.value.i32 = value;
 
 	sample_rate_index = value;
-	if(sample_rate_index >= 31) {
+	if(sample_rate_index >= 31 || (channel != CH1 && channel != CH2)) {
 		return SCPI_RES_ERR;
 	}
 
@@ -2833,6 +2834,14 @@ static scpi_result_t zwdx_set_scope_sample_rate(scpi_t *context)
 	 *   index 3 -> 125 MHz / 8, ...
 	 */
 	decimation_value = (sample_rate_index == 0) ? 0 : (1U << sample_rate_index);
+
+	get_param_by_name(PARAM_CURRENT, "scope_run", 0, &run_state);
+	if(run_state.value.i32) {
+		set_param_by_name(PARAM_CURRENT, "scope_run", 0,
+			(ParamValue){.type = PARAM_INT32, .value.i32 = 0});
+		/* DMA 每 20 ms 检查一次 STOP，临时留 20 ms 给采集线程清理。 */
+		usleep(40000);
+	}
 
 	if(channel == CH1) {
 		reg_write_by_name("ch1_scope_decimation_value", decimation_value);
@@ -2847,6 +2856,10 @@ static scpi_result_t zwdx_set_scope_sample_rate(scpi_t *context)
 
 	reg_write_by_name("ch2_scpoe_up_en", 1);
 	reg_write_by_name("ch2_scpoe_up_en", 0);
+
+	if(run_state.value.i32) {
+		set_param_by_name(PARAM_CURRENT, "scope_run", 0, run_state);
+	}
 
 	return SCPI_RES_OK;
 }
